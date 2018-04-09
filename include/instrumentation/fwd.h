@@ -6,6 +6,7 @@ namespace instrumentation {
 
 class group;
 class counter;
+template<typename> class gauge;
 
 
 } /* namespace instrumentation */

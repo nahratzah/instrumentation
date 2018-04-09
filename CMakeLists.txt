@@ -25,6 +25,7 @@ set(headers
     include/instrumentation/tags.h
     include/instrumentation/visitor.h
     include/instrumentation/counter.h
+    include/instrumentation/gauge.h
     )
 set(headers_detail
     )
@@ -36,6 +37,7 @@ add_library (instrumentation
     src/tags.cc
     src/hierarchy.cc
     src/counter.cc
+    src/gauge.cc
     )
 
 find_package (Boost COMPONENTS context REQUIRED)

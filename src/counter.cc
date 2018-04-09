@@ -3,7 +3,9 @@
 namespace instrumentation {
 
 
-counter::~counter() noexcept {}
+counter::~counter() noexcept {
+  disable();
+}
 
 auto counter::visit(visitor& v) const
 -> void {
