@@ -12,7 +12,8 @@ class instrumentation_export_ timing_accumulate final
 : public hierarchy
 {
  public:
-  using duration = std::chrono::high_resolution_clock::duration;
+  using clock_type = std::chrono::high_resolution_clock;
+  using duration = clock_type::duration;
 
   using hierarchy::hierarchy;
 

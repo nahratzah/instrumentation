@@ -17,7 +17,8 @@ class instrumentation_export_ timing final
   using atom_vector = std::vector<std::atomic<std::uint64_t>>;
 
  public:
-  using duration = std::chrono::high_resolution_clock::duration;
+  using clock_type = std::chrono::high_resolution_clock;
+  using duration = clock_type::duration;
   static constexpr std::chrono::milliseconds dfl_resolution{1};
   static constexpr std::size_t dfl_buckets = std::chrono::seconds{1} / dfl_resolution;
 
