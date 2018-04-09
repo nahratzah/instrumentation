@@ -1,14 +1,10 @@
 #ifndef INSTRUMENTATION_GROUP_H
 #define INSTRUMENTATION_GROUP_H
 
-#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <mutex>
-#include <string_view>
-#include <vector>
 #include <instrumentation/hierarchy.h>
-#include <instrumentation/tags.h>
 #include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {

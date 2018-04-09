@@ -5,6 +5,9 @@
 #include <instrumentation/visitor.h>
 #include <instrumentation/tags.h>
 #include <instrumentation/instrumentation_export_.h>
+#include <atomic>
+#include <vector>
+#include <string_view>
 
 namespace instrumentation {
 
