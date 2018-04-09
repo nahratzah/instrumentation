@@ -93,7 +93,7 @@ auto print_visitor::print_tags_(const hierarchy& h)
   bool first = true;
   out_ << "{";
   for (auto tag_value : values) {
-    out_ << (std::exchange(first, false) ? "" : ",") << tag_value.first;
+    out_ << (std::exchange(first, false) ? "" : ",") << tag_value.first << "=";
     std::visit(
         [this](const auto& v) {
           out_ << v;

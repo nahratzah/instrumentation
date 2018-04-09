@@ -45,6 +45,7 @@ auto hierarchy::do_enable_() noexcept -> void {
 }
 
 auto hierarchy::disable() noexcept -> void {
+  visit_before_destroy_(*this);
   if (enabled_.load(std::memory_order_acquire)) {
     assert(parent_ != nullptr);
     parent_->erase(*this);

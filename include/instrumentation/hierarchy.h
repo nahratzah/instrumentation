@@ -56,6 +56,9 @@ class instrumentation_export_ hierarchy {
  private:
   auto do_enable_() noexcept -> void;
 
+  instrumentation_local_
+  auto visit_before_destroy_(const hierarchy& h) noexcept -> void;
+
   std::atomic<bool> enabled_{ false };
   group* parent_ = nullptr;
   hierarchy* sibling_ = nullptr;

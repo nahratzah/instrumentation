@@ -38,6 +38,7 @@ add_library (instrumentation
     src/visitor.cc
     src/tags.cc
     src/hierarchy.cc
+    src/on_destroy_visitor.cc
     src/counter.cc
     src/gauge.cc
     src/timing.cc
