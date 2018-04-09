@@ -5,42 +5,8 @@
 namespace instrumentation {
 
 
-group::group(std::string_view name, class tags t) noexcept
-: local_name(name),
-  local_tags(std::move(t))
-{}
-
-group::group(std::string_view name, group& parent, class tags t) noexcept
-: local_name(name),
-  local_tags(std::move(t)),
-  parent_(&parent)
-{}
-
 group::~group() noexcept {
-  if (parent_ != nullptr && enabled_.load(std::memory_order_acquire))
-    parent_->erase(*this);
-}
-
-auto group::name() const
--> std::vector<std::string_view> {
-  using vector = std::vector<std::string_view>;
-
-  vector result = (parent_ == nullptr ? vector() : parent_->name());
-  result.push_back(local_name);
-  return result;
-}
-
-auto group::tags() const
--> tags::map_type {
-  tags::map_type result = *local_tags;
-  for (auto g = parent_;
-      g != nullptr;
-      g = g->parent_) {
-    std::copy(
-        g->local_tags->begin(), g->local_tags->end(),
-        std::inserter(result, result.end()));
-  }
-  return result;
+  disable();
 }
 
 auto group::add(hierarchy& g)

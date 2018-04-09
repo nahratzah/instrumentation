@@ -18,47 +18,25 @@ class instrumentation_export_ group final
 : public hierarchy
 {
  public:
-  class instrumentation_local_ iterator;
+  class iterator;
 
-  group(std::string_view name, tags t = {}) noexcept;
-  group(std::string_view name, group& parent, tags t = {}) noexcept;
-  group(const group&) = delete;
+  using hierarchy::hierarchy;
   ~group() noexcept override;
-
-  auto name() const -> std::vector<std::string_view>;
-  auto tags() const -> tags::map_type;
-
-  auto enable()
-  noexcept
-  -> void {
-    bool expect_false = false;
-    if (parent_ != nullptr &&
-        enabled_.compare_exchange_strong(
-            expect_false, true,
-            std::memory_order_acquire, std::memory_order_relaxed)) {
-      parent_->add(*this);
-    }
-  }
 
   auto add(hierarchy& g) noexcept -> void;
   auto erase(hierarchy& g) noexcept -> void;
 
   auto visit(visitor& v) const -> void override;
 
-  const std::string_view local_name;
-  const class tags local_tags;
-
   auto begin() const noexcept -> iterator;
   constexpr auto end() const noexcept -> iterator;
 
  private:
-  std::atomic<bool> enabled_{ false };
-  group* parent_ = nullptr;
   std::mutex mtx_;
   hierarchy* child_ = nullptr; // Protected by mtx_
 };
 
-class group::iterator {
+class instrumentation_local_ group::iterator {
  public:
   using difference_type = std::ptrdiff_t;
   using value_type = hierarchy;

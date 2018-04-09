@@ -5,17 +5,17 @@
 ///\ingroup instrumentation
 
 #include <cstdint>
-#include <instrumentation/basic_metric.h>
+#include <instrumentation/hierarchy.h>
 #include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
 
 
 class instrumentation_export_ counter final
-: public basic_metric
+: public hierarchy
 {
  public:
-  using basic_metric::basic_metric;
+  using hierarchy::hierarchy;
 
   ~counter() noexcept override;
 
