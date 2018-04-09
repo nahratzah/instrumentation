@@ -3,6 +3,7 @@
 
 #include <instrumentation/instrumentation_export_.h>
 #include <instrumentation/hierarchy.h>
+#include <instrumentation/time_track.h>
 #include <chrono>
 #include <cstddef>
 #include <atomic>
@@ -50,6 +51,10 @@ class instrumentation_export_ timing final
 
   auto begin() const noexcept -> iterator;
   auto end() const noexcept -> iterator;
+
+  template<typename Fn, typename... Args>
+  auto measure(Fn&& fn, Args&&... args)
+  -> decltype(std::invoke(std::declval<Fn>(), std::declval<Args>()...));
 
  private:
   atom_vector timings_;
@@ -113,6 +118,13 @@ inline auto timing::begin() const noexcept -> iterator {
 
 inline auto timing::end() const noexcept -> iterator {
   return iterator(timings_.size() * resolution_, resolution_, timings_.end());
+}
+
+template<typename Fn, typename... Args>
+auto timing::measure(Fn&& fn, Args&&... args)
+-> decltype(std::invoke(std::declval<Fn>(), std::declval<Args>()...)) {
+  time_track<timing> tt{ *this };
+  return std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...);
 }
 
 

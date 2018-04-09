@@ -3,6 +3,7 @@
 
 #include <instrumentation/instrumentation_export_.h>
 #include <instrumentation/hierarchy.h>
+#include <instrumentation/time_track.h>
 #include <chrono>
 
 namespace instrumentation {
@@ -32,9 +33,20 @@ class instrumentation_export_ timing_accumulate final
     return duration(ticks_.load(std::memory_order_relaxed));
   }
 
+  template<typename Fn, typename... Args>
+  auto measure(Fn&& fn, Args&&... args)
+  -> decltype(std::invoke(std::declval<Fn>(), std::declval<Args>()...));
+
  private:
   std::atomic<duration::rep> ticks_;
 };
+
+template<typename Fn, typename... Args>
+auto timing_accumulate::measure(Fn&& fn, Args&&... args)
+-> decltype(std::invoke(std::declval<Fn>(), std::declval<Args>()...)) {
+  time_track<timing_accumulate> tt{ *this };
+  return std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...);
+}
 
 
 } /* namespace instrumentation */
