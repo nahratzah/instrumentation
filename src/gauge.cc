@@ -23,6 +23,16 @@ auto gauge<std::int64_t>::visit(visitor& v) const
 }
 
 
+gauge<double>::~gauge() noexcept {
+  disable();
+}
+
+auto gauge<double>::visit(visitor& v) const
+-> void {
+  v(*this);
+}
+
+
 gauge<std::string>::~gauge() noexcept {
   disable();
 }
