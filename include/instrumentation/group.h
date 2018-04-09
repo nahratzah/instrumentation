@@ -1,34 +1,55 @@
 #ifndef INSTRUMENTATION_GROUP_H
 #define INSTRUMENTATION_GROUP_H
 
+#include <algorithm>
+#include <atomic>
 #include <mutex>
 #include <string_view>
+#include <utility>
+#include <vector>
+#include <instrumentation/hierarchy.h>
+#include <instrumentation/tags.h>
 
 namespace instrumentation {
 
 
-class group {
+class group final
+: public hierarchy
+{
  public:
-  constexpr group(std::string_view name) noexcept
-  : group(name, nullptr)
-  {}
+  group(std::string_view name, tags t = {}) noexcept;
+  group(std::string_view name, group& parent, tags t = {}) noexcept;
+  group(const group&) = delete;
+  ~group() noexcept override;
 
-  constexpr group(std::string_view name, group* parent) noexcept
-  : name(name),
-    parent_(nullptr)
-  {}
+  auto name() const -> std::vector<std::string_view>;
+  auto tags() const -> tags::map_type;
 
-  const std::string_view name;
-
-  void enable() {
-    std::call_once(registered_, &group::do_register_, this);
+  auto enable()
+  noexcept
+  -> void {
+    bool expect_false = false;
+    if (parent_ != nullptr &&
+        enabled_.compare_exchange_strong(
+            expect_false, true,
+            std::memory_order_acquire, std::memory_order_relaxed)) {
+      parent_->add(*this);
+    }
   }
 
- private:
-  void do_register_() noexcept;
+  auto add(hierarchy& g) noexcept -> void;
+  auto erase(hierarchy& g) noexcept -> void;
 
-  group*const parent_;
-  std::once_flag registered_;
+  auto visit(visitor& v) const -> void override;
+
+  const std::string_view local_name;
+  const class tags local_tags;
+
+ private:
+  std::atomic<bool> enabled_{ false };
+  group* parent_ = nullptr;
+  std::mutex mtx_;
+  hierarchy* child_ = nullptr; // Protected by mtx_
 };
 
 

@@ -20,11 +20,20 @@ endif()
 
 set(headers
     include/instrumentation/group.h
+    include/instrumentation/hierarchy.h
+    include/instrumentation/tags.h
+    include/instrumentation/visitor.h
     )
 set(headers_detail
     )
 
-add_library (instrumentation INTERFACE)
+include_directories (include)
+add_library (instrumentation
+    src/group.cc
+    src/visitor.cc
+    src/tags.cc
+    src/hierarchy.cc
+    )
 
 find_package (Boost COMPONENTS context REQUIRED)
 target_link_libraries (instrumentation INTERFACE ${Boost_CONTEXT_LIBRARY})
