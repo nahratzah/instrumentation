@@ -27,8 +27,9 @@ class instrumentation_export_ group final
   auto begin() const noexcept -> iterator;
   constexpr auto end() const noexcept -> iterator;
 
+  mutable std::mutex mtx;
+
  private:
-  std::mutex mtx_;
   hierarchy* child_ = nullptr; // Protected by mtx_
 };
 

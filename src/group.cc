@@ -13,14 +13,14 @@ auto group::add(hierarchy& g)
 noexcept
 -> void {
   enable();
-  std::lock_guard<std::mutex> lck{ mtx_ };
+  std::lock_guard<std::mutex> lck{ mtx };
   g.sibling_ = std::exchange(child_, &g);
 }
 
 auto group::erase(hierarchy& g)
 noexcept
 -> void {
-  std::lock_guard<std::mutex> lck{ mtx_ };
+  std::lock_guard<std::mutex> lck{ mtx };
   for (hierarchy** child_iter = &child_;
       *child_iter != nullptr;
       child_iter = &(*child_iter)->sibling_) {
