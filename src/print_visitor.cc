@@ -57,6 +57,8 @@ auto print_visitor::operator()(const timing& t)
   out_ << " = {";
   bool first = true;
   for (timing::bucket b : t) {
+    if (b.count == 0) continue; // Don't print zeroes, they're distracting.
+
 #if 1 // Change to '__cplusplus < ...' when C++20 gets a version number.
     using tdelta = std::chrono::duration<double, std::milli>;
     tdelta lo(b.lo);
