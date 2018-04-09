@@ -23,10 +23,11 @@ class instrumentation_export_ print_visitor final
   ~print_visitor() noexcept;
 
   auto operator()(const counter& c) -> void override;
-  auto operator()(const gauge<bool>& c) -> void override;
-  auto operator()(const gauge<std::int64_t>& c) -> void override;
-  auto operator()(const gauge<double>& c) -> void override;
-  auto operator()(const gauge<std::string>& c) -> void override;
+  auto operator()(const gauge<bool>& g) -> void override;
+  auto operator()(const gauge<std::int64_t>& g) -> void override;
+  auto operator()(const gauge<double>& g) -> void override;
+  auto operator()(const gauge<std::string>& g) -> void override;
+  auto operator()(const timing& t) -> void override;
 
  private:
   instrumentation_local_ auto print_name_(const hierarchy& h) -> void;

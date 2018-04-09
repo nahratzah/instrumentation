@@ -19,6 +19,7 @@ class instrumentation_export_ visitor {
   virtual auto operator()(const gauge<std::int64_t>& g) -> void = 0;
   virtual auto operator()(const gauge<double>& g) -> void = 0;
   virtual auto operator()(const gauge<std::string>& g) -> void = 0;
+  virtual auto operator()(const timing& t) -> void = 0;
 };
 
 

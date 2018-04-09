@@ -1,7 +1,9 @@
 #include <instrumentation/print_visitor.h>
 #include <instrumentation/counter.h>
 #include <instrumentation/gauge.h>
+#include <instrumentation/timing.h>
 #include <iostream>
+#include <sstream>
 
 namespace instrumentation {
 
@@ -16,35 +18,58 @@ auto print_visitor::operator()(const counter& c)
 -> void {
   print_name_(c);
   print_tags_(c);
-  out_ << " = " << *c;
+  out_ << " = " << *c << "\n";
 }
 
 auto print_visitor::operator()(const gauge<bool>& g)
 -> void {
   print_name_(g);
   print_tags_(g);
-  out_ << " = " << *g;
+  out_ << " = " << *g << "\n";
 }
 
 auto print_visitor::operator()(const gauge<std::int64_t>& g)
 -> void {
   print_name_(g);
   print_tags_(g);
-  out_ << " = " << *g;
+  out_ << " = " << *g << "\n";
 }
 
 auto print_visitor::operator()(const gauge<double>& g)
 -> void {
   print_name_(g);
   print_tags_(g);
-  out_ << " = " << *g;
+  out_ << " = " << *g << "\n";
 }
 
 auto print_visitor::operator()(const gauge<std::string>& g)
 -> void {
   print_name_(g);
   print_tags_(g);
-  out_ << " = " << *g;
+  out_ << " = " << *g << "\n";
+}
+
+auto print_visitor::operator()(const timing& t)
+-> void {
+  print_name_(t);
+  print_tags_(t);
+  out_ << " = {";
+  bool first = true;
+  for (timing::bucket b : t) {
+#if 1 // Change to '__cplusplus < ...' when C++20 gets a version number.
+    using tdelta = std::chrono::duration<double, std::milli>;
+    tdelta lo(b.lo);
+    tdelta hi(b.hi);
+
+    out_ << (std::exchange(first, false) ? "" : ", ")
+        << lo.count() << "ms" << "-" << hi.count() << "ms" << "=" << b.count;
+#else
+    out_ << (std::exchange(first, false) ? "" : ", ")
+        << b.lo << "-" << b.hi << "=" << b.count;
+#endif
+
+  }
+  out_ << "}\n";
 }
 
 auto print_visitor::print_name_(const hierarchy& h)

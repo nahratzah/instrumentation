@@ -26,6 +26,7 @@ set(headers
     include/instrumentation/visitor.h
     include/instrumentation/counter.h
     include/instrumentation/gauge.h
+    include/instrumentation/timing.h
     include/instrumentation/print_visitor.h
     )
 set(headers_detail
@@ -39,6 +40,7 @@ add_library (instrumentation
     src/hierarchy.cc
     src/counter.cc
     src/gauge.cc
+    src/timing.cc
     src/print_visitor.cc
     )
 
