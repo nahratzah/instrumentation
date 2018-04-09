@@ -1,5 +1,7 @@
 #include <instrumentation/hierarchy.h>
 #include <instrumentation/group.h>
+#include <sstream>
+#include <thread>
 
 namespace instrumentation {
 
@@ -18,13 +20,22 @@ auto hierarchy::name() const
 auto hierarchy::tags() const
 -> tags::map_type {
   tags::map_type result = *local_tags;
+  bool add_tls_entry = local_tags.tls_entry();
+
   for (const hierarchy* g = parent_;
       g != nullptr;
       g = g->parent_) {
+    add_tls_entry |= g->local_tags.tls_entry();
     std::copy(
         g->local_tags->begin(), g->local_tags->end(),
         std::inserter(result, result.end()));
   }
+
+  if (add_tls_entry) {
+    result[tags::tls_entry_key] =
+        (std::ostringstream() << std::this_thread::get_id()).str();
+  }
+
   return result;
 }
 

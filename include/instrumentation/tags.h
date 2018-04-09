@@ -16,6 +16,9 @@ class tags {
   using value_type = std::variant<bool, std::int64_t, double, std::string_view, std::string>;
   using map_type = std::unordered_map<std::string_view, value_type>;
 
+  instrumentation_export_
+  static const std::string_view tls_entry_key;
+
   instrumentation_local_ tags() noexcept = default;
   instrumentation_export_ ~tags() noexcept;
 
@@ -49,9 +52,22 @@ class tags {
     return with(name, value_type(std::in_place_type<std::string_view>, value));
   }
 
+  instrumentation_local_
+  auto with_tls()
+  -> tags& {
+    tls_enable_ = true;
+    return *this;
+  }
+
   auto with(std::string_view name, const char* value) -> tags& = delete;
 
   instrumentation_export_ auto with(std::string_view name, value_type value) -> tags&;
+
+  auto tls_entry() const
+  noexcept
+  -> bool {
+    return tls_enable_;
+  }
 
   instrumentation_local_
   auto get() const
@@ -73,6 +89,7 @@ class tags {
 
  private:
   map_type map_;
+  bool tls_enable_ = false;
 };
 
 
