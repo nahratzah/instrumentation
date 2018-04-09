@@ -19,10 +19,13 @@ else()
 endif()
 
 set(headers
+    include/instrumentation/instrumentation_export_.h
     include/instrumentation/group.h
     include/instrumentation/hierarchy.h
     include/instrumentation/tags.h
     include/instrumentation/visitor.h
+    include/instrumentation/basic_metric.h
+    include/instrumentation/counter.h
     )
 set(headers_detail
     )
@@ -33,6 +36,8 @@ add_library (instrumentation
     src/visitor.cc
     src/tags.cc
     src/hierarchy.cc
+    src/basic_metric.cc
+    src/counter.cc
     )
 
 find_package (Boost COMPONENTS context REQUIRED)

@@ -3,11 +3,12 @@
 
 #include <instrumentation/fwd.h>
 #include <instrumentation/visitor.h>
+#include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
 
 
-class hierarchy {
+class instrumentation_export_ hierarchy {
   friend class instrumentation::group;
 
  public:

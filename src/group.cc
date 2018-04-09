@@ -1,4 +1,6 @@
 #include <instrumentation/group.h>
+#include <algorithm>
+#include <utility>
 
 namespace instrumentation {
 
@@ -66,10 +68,6 @@ noexcept
 auto group::visit(visitor& v) const
 -> void {
   v(*this);
-  for (hierarchy* child_iter = child_;
-      child_iter != nullptr;
-      child_iter = child_iter->sibling_)
-    child_iter->visit(v);
 }
 
 

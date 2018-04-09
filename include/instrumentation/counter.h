@@ -4,26 +4,20 @@
 ///\file
 ///\ingroup instrumentation
 
-#include <atomic>
 #include <cstdint>
-#include <mutex>
-#include <string_view>
+#include <instrumentation/basic_metric.h>
+#include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
 
 
-class counter {
+class instrumentation_export_ counter final
+: public basic_metric
+{
  public:
-  constexpr counter(std::string_view name, group* parent) noexcept
-  : name(name),
-    parent_(parent)
-  {}
+  using basic_metric::basic_metric;
 
-  const std::string_view name;
-
-  void enable() {
-    std::call_once(registered_, &counter::do_register_, this);
-  }
+  ~counter() noexcept override;
 
   auto operator++()
   noexcept
@@ -44,11 +38,9 @@ class counter {
     return value_.load(std::memory_order_relaxed);
   }
 
- private:
-  void do_register_() noexcept;
+  auto visit(visitor& v) const -> void override;
 
-  group*const parent_;
-  std::once_flag registered_;
+ private:
   std::atomic<std::uintmax_t> value_{ 0u };
 };
 

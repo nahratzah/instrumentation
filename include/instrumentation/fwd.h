@@ -5,6 +5,7 @@ namespace instrumentation {
 
 
 class group;
+class counter;
 
 
 } /* namespace instrumentation */
