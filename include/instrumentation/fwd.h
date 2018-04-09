@@ -8,6 +8,7 @@ class group;
 class counter;
 template<typename> class gauge;
 class timing;
+class timing_accumulate;
 
 
 } /* namespace instrumentation */

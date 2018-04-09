@@ -2,6 +2,7 @@
 #include <instrumentation/counter.h>
 #include <instrumentation/gauge.h>
 #include <instrumentation/timing.h>
+#include <instrumentation/timing_accumulate.h>
 #include <iostream>
 #include <sstream>
 
@@ -70,6 +71,20 @@ auto print_visitor::operator()(const timing& t)
 
   }
   out_ << "}\n";
+}
+
+auto print_visitor::operator()(const timing_accumulate& t)
+-> void {
+  print_name_(t);
+  print_tags_(t);
+
+#if 1 // Change to '__cplusplus < ...' when C++20 gets a version number.
+  using tdelta = std::chrono::duration<double, std::milli>;
+
+  out_ << " = " << tdelta(*t).count() << "ms\n";
+#else
+  out_ << " = " << *t << "\n";
+#endif
 }
 
 auto print_visitor::print_name_(const hierarchy& h)

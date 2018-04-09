@@ -21,6 +21,7 @@ class instrumentation_export_ visitor {
   virtual auto operator()(const gauge<double>& g) -> void = 0;
   virtual auto operator()(const gauge<std::string>& g) -> void = 0;
   virtual auto operator()(const timing& t) -> void = 0;
+  virtual auto operator()(const timing_accumulate& t) -> void = 0;
 
   static auto on_destroy_visitor(std::unique_ptr<visitor> vptr) -> std::unique_ptr<visitor>;
 };

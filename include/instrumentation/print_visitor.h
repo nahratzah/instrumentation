@@ -28,6 +28,7 @@ class instrumentation_export_ print_visitor final
   auto operator()(const gauge<double>& g) -> void override;
   auto operator()(const gauge<std::string>& g) -> void override;
   auto operator()(const timing& t) -> void override;
+  auto operator()(const timing_accumulate& t) -> void override;
 
  private:
   instrumentation_local_ auto print_name_(const hierarchy& h) -> void;
