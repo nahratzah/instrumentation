@@ -16,7 +16,17 @@ class instrumentation_export_ timing_accumulate final
   using clock_type = std::chrono::high_resolution_clock;
   using duration = clock_type::duration;
 
-  using hierarchy::hierarchy;
+  timing_accumulate(std::string_view local_name, class tags t = {}) noexcept
+  : hierarchy(local_name, std::move(t))
+  {
+    this->enable();
+  }
+
+  timing_accumulate(std::string_view local_name, group& parent, class tags t = {}) noexcept
+  : hierarchy(local_name, parent, std::move(t))
+  {
+    this->enable();
+  }
 
   ~timing_accumulate() noexcept override;
 

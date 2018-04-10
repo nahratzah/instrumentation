@@ -15,7 +15,17 @@ class instrumentation_export_ counter final
 : public hierarchy
 {
  public:
-  using hierarchy::hierarchy;
+  counter(std::string_view local_name, class tags t = {}) noexcept
+  : hierarchy(local_name, std::move(t))
+  {
+    this->enable();
+  }
+
+  counter(std::string_view local_name, group& parent, class tags t = {}) noexcept
+  : hierarchy(local_name, parent, std::move(t))
+  {
+    this->enable();
+  }
 
   ~counter() noexcept override;
 

@@ -23,12 +23,16 @@ class instrumentation_export_ gauge<bool> final
   gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
   : hierarchy(local_name, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
   : hierarchy(local_name, parent, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   ~gauge() noexcept override;
 
@@ -53,12 +57,16 @@ class instrumentation_export_ gauge<std::int64_t> final
   gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
   : hierarchy(local_name, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
   : hierarchy(local_name, parent, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   ~gauge() noexcept override;
 
@@ -83,12 +91,16 @@ class instrumentation_export_ gauge<double> final
   gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
   : hierarchy(local_name, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
   : hierarchy(local_name, parent, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   ~gauge() noexcept override;
 
@@ -113,12 +125,16 @@ class instrumentation_export_ gauge<std::string> final
   gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
   : hierarchy(local_name, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
   : hierarchy(local_name, parent, std::move(t)),
     fn_(std::move(fn))
-  {}
+  {
+    this->enable();
+  }
 
   ~gauge() noexcept override;
 
