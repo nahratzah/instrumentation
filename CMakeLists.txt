@@ -21,16 +21,18 @@ else()
 endif()
 
 set(headers
-    include/instrumentation/instrumentation_export_.h
-    include/instrumentation/group.h
     include/instrumentation/basic_metric.h
-    include/instrumentation/tags.h
-    include/instrumentation/visitor.h
     include/instrumentation/counter.h
+    include/instrumentation/fwd.h
     include/instrumentation/gauge.h
+    include/instrumentation/group.h
+    include/instrumentation/instrumentation_export_.h
+    include/instrumentation/print_visitor.h
+    include/instrumentation/tags.h
+    include/instrumentation/time_track.h
     include/instrumentation/timing.h
     include/instrumentation/timing_accumulate.h
-    include/instrumentation/print_visitor.h
+    include/instrumentation/visitor.h
     )
 set(headers_detail
     )
