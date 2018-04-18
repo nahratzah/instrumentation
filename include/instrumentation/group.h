@@ -9,6 +9,7 @@
 #include <instrumentation/tags.h>
 #include <instrumentation/visitor.h>
 #include <instrumentation/fwd.h>
+#include <instrumentation/basic_metric.h>
 #include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
@@ -17,6 +18,7 @@ namespace instrumentation {
 class instrumentation_export_ group {
  public:
   class subgroup_set;
+  class submetric_set;
   friend class instrumentation::basic_metric;
 
   explicit constexpr group(const std::string_view& local_name)
@@ -39,6 +41,7 @@ class instrumentation_export_ group {
   auto visit(visitor& v) const -> void;
   static auto mtx() noexcept -> std::recursive_mutex&;
   constexpr auto childgroups() const noexcept -> subgroup_set;
+  constexpr auto childmetrics() const noexcept -> submetric_set;
 
   auto name() const -> std::vector<std::string_view>;
   auto tags() const -> tag_map;
@@ -62,10 +65,10 @@ class instrumentation_export_ group {
   virtual auto apply_local_tags_(tag_map& map) const -> void = 0;
 
   group*const parent_;
-  mutable group* child_groups_ = nullptr;
-  mutable basic_metric* child_metrics_ = nullptr;
-  mutable group* sibling_ = nullptr;
-  mutable bool enabled_ = false;
+  group* child_groups_ = nullptr;
+  basic_metric* child_metrics_ = nullptr;
+  group* sibling_ = nullptr;
+  bool enabled_ = false;
 };
 
 template<std::size_t N>
@@ -126,6 +129,16 @@ struct group::subgroup_set {
   const group* self_ = nullptr;
 };
 
+struct group::submetric_set {
+ public:
+  class iterator;
+
+  auto begin() const noexcept -> iterator;
+  constexpr auto end() const noexcept -> iterator;
+
+  const group* self_ = nullptr;
+};
+
 class instrumentation_local_ group::subgroup_set::iterator {
  public:
   using difference_type = std::ptrdiff_t;
@@ -175,6 +188,55 @@ class instrumentation_local_ group::subgroup_set::iterator {
   const group* child_;
 };
 
+class instrumentation_local_ group::submetric_set::iterator {
+ public:
+  using difference_type = std::ptrdiff_t;
+  using value_type = basic_metric;
+  using pointer = const basic_metric*;
+  using reference = const basic_metric&;
+  using iterator_category = std::forward_iterator_tag;
+
+  explicit constexpr iterator(const basic_metric* child) noexcept
+  : child_(child)
+  {}
+
+  auto operator++()
+  -> iterator& {
+    assert(child_ != nullptr);
+    child_ = child_->sibling_;
+    return *this;
+  }
+
+  auto operator++(int)
+  -> iterator {
+    assert(child_ != nullptr);
+    return iterator(std::exchange(child_, child_->sibling_));
+  }
+
+  auto operator==(const iterator& y) const noexcept
+  -> bool {
+    return child_ == y.child_;
+  }
+
+  auto operator!=(const iterator& y) const noexcept
+  -> bool {
+    return !(*this == y);
+  }
+
+  auto operator*() const -> reference {
+    assert(child_ != nullptr);
+    return *child_;
+  }
+
+  auto operator->() const -> pointer {
+    assert(child_ != nullptr);
+    return child_;
+  }
+
+ private:
+  const basic_metric* child_;
+};
+
 inline auto group::subgroup_set::begin() const noexcept -> iterator {
   return iterator(self_->child_groups_);
 }
@@ -183,10 +245,24 @@ constexpr auto group::subgroup_set::end() const noexcept -> iterator {
   return iterator(nullptr);
 }
 
+inline auto group::submetric_set::begin() const noexcept -> iterator {
+  return iterator(self_->child_metrics_);
+}
+
+constexpr auto group::submetric_set::end() const noexcept -> iterator {
+  return iterator(nullptr);
+}
+
 constexpr auto group::childgroups() const
 noexcept
 -> subgroup_set {
   return subgroup_set{ this };
+}
+
+constexpr auto group::childmetrics() const
+noexcept
+-> submetric_set {
+  return submetric_set{ this };
 }
 
 

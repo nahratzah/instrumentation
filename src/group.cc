@@ -71,7 +71,34 @@ noexcept
     }
   }
 
-  if (child_groups_ == nullptr)
+  if (child_groups_ == nullptr && child_metrics_ == nullptr)
+    maybe_disable_(lck);
+}
+
+auto group::add_(basic_metric& m)
+noexcept
+-> void {
+  std::unique_lock<std::recursive_mutex> lck{ mtx() };
+
+  maybe_enable_(lck);
+  m.sibling_ = std::exchange(child_metrics_, &m);
+}
+
+auto group::erase_(basic_metric& m)
+noexcept
+-> void {
+  std::unique_lock<std::recursive_mutex> lck{ mtx() };
+
+  for (basic_metric** child_iter = &child_metrics_;
+      *child_iter != nullptr;
+      child_iter = &(*child_iter)->sibling_) {
+    if (*child_iter == &m) {
+      *child_iter = std::exchange(m.sibling_, nullptr);
+      break;
+    }
+  }
+
+  if (child_groups_ == nullptr && child_metrics_ == nullptr)
     maybe_disable_(lck);
 }
 
