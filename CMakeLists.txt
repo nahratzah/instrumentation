@@ -48,6 +48,8 @@ add_library (instrumentation
     src/timing_accumulate.cc
     src/print_visitor.cc
     )
+set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
+set_property (TARGET instrumentation PROPERTY SOVERSION "0.0")
 
 find_package (Boost COMPONENTS context REQUIRED)
 target_link_libraries (instrumentation INTERFACE ${Boost_CONTEXT_LIBRARY})
