@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
+#include <string>
 #include <unordered_map>
 #include <variant>
 #include <instrumentation/instrumentation_export_.h>
@@ -14,7 +15,7 @@ namespace instrumentation {
 
 
 using tag_value = std::variant<bool, std::int64_t, std::string_view>;
-using tag_map = std::unordered_map<std::string_view, tag_value>;
+using tag_map = std::unordered_map<std::string_view, std::variant<bool, std::int64_t, std::string_view, std::string>>;
 
 struct tag_entry {
   std::string_view name;
@@ -37,7 +38,11 @@ struct tag_entry {
   {}
 
   auto apply(tag_map& map) const -> void {
-    map[name] = value;
+    std::visit(
+        [this, &map](const auto& value) {
+          map[name] = value;
+        },
+        value);
   }
 };
 
