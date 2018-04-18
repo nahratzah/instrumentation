@@ -17,8 +17,8 @@ namespace instrumentation {
 
 class instrumentation_export_ group {
  public:
-  class subgroup_set;
-  class submetric_set;
+  struct subgroup_set;
+  struct submetric_set;
   friend class instrumentation::basic_metric;
 
   explicit constexpr group(const std::string_view& local_name)
