@@ -1,5 +1,5 @@
 #include <instrumentation/visitor.h>
-#include <instrumentation/hierarchy.h>
+#include <instrumentation/basic_metric.h>
 #include <exception>
 #include <iostream>
 #include <memory>

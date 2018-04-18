@@ -1,4 +1,4 @@
-#include <instrumentation/hierarchy.h>
+#include <instrumentation/basic_metric.h>
 #include <instrumentation/group.h>
 #include <sstream>
 #include <thread>

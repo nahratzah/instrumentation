@@ -63,6 +63,7 @@ class instrumentation_export_ group {
 
   group*const parent_;
   mutable group* child_groups_ = nullptr;
+  mutable basic_metric* child_metrics_ = nullptr;
   mutable group* sibling_ = nullptr;
   mutable bool enabled_ = false;
 };
