@@ -73,6 +73,13 @@ class tags_ {
     return values_[Idx];
   }
 
+  auto as_map() const
+  -> tag_map {
+    tag_map result;
+    apply(result);
+    return result;
+  }
+
  private:
   std::array<tag_entry, N> values_;
 };
@@ -86,6 +93,11 @@ class tags_<0> {
   noexcept
   -> void {
     /* SKIP */
+  }
+
+  auto as_map() const
+  -> tag_map {
+    return {};
   }
 };
 

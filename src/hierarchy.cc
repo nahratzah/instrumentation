@@ -4,52 +4,52 @@
 #include <thread>
 
 namespace instrumentation {
+namespace {
 
 
-hierarchy::~hierarchy() noexcept {}
-
-auto hierarchy::name() const
+auto create_metric_name_(std::string_view local_name, group& parent)
 -> std::vector<std::string_view> {
-  using vector = std::vector<std::string_view>;
-
-  vector result = (parent_ == nullptr ? vector() : parent_->name());
+  std::vector<std::string_view> result = parent.name();
   result.push_back(local_name);
   return result;
 }
 
-auto hierarchy::tags() const
--> tags::map_type {
-  tags::map_type result = *local_tags;
-  bool add_tls_entry = local_tags.tls_entry();
-
-  for (const hierarchy* g = parent_;
-      g != nullptr;
-      g = g->parent_) {
-    add_tls_entry |= g->local_tags.tls_entry();
-    std::copy(
-        g->local_tags->begin(), g->local_tags->end(),
-        std::inserter(result, result.end()));
-  }
-
-  if (add_tls_entry) {
-    result[tags::tls_entry_key] =
-        (std::ostringstream() << std::this_thread::get_id()).str();
-  }
-
+auto create_metric_tags_(group& parent, const tag_map& tags)
+-> tag_map {
+  tag_map result = parent.tags();
+  std::for_each(
+      tags.begin(), tags.end(),
+      [&result](const auto& pair) { result[pair.first] = pair.second; });
   return result;
 }
 
-auto hierarchy::do_enable_() noexcept -> void {
-  assert(parent_ != nullptr);
-  parent_->add(*this);
+
+} /* namespace instrumentation::<unnamed> */
+
+
+basic_metric::basic_metric(std::string_view local_name, group& parent, const tag_map& tags)
+: name(create_metric_name_(local_name, parent)),
+  tags(create_metric_tags_(parent, tags)),
+  parent_(parent)
+{}
+
+basic_metric::~basic_metric() noexcept {
+  assert(!enabled_);
 }
 
-auto hierarchy::disable() noexcept -> void {
-  visit_before_destroy_(*this);
-  if (enabled_.load(std::memory_order_acquire)) {
-    assert(parent_ != nullptr);
-    parent_->erase(*this);
-  }
+auto basic_metric::enable() noexcept -> void {
+  assert(!enabled_);
+
+  parent_.add_(*this);
+  enabled_ = true;
+}
+
+auto basic_metric::disable() noexcept -> void {
+  assert(enabled_);
+
+  visit_before_destroy_();
+  parent_.erase_(*this);
+  enabled_ = false;
 }
 
 

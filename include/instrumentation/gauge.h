@@ -1,9 +1,11 @@
 #ifndef INSTRUMENTATION_GAUGE_H
 #define INSTRUMENTATION_GAUGE_H
 
+#include <cstddef>
+#include <cstdint>
 #include <string_view>
 #include <functional>
-#include <instrumentation/hierarchy.h>
+#include <instrumentation/basic_metric.h>
 #include <instrumentation/tags.h>
 #include <instrumentation/visitor.h>
 #include <instrumentation/instrumentation_export_.h>
@@ -15,20 +17,13 @@ template<typename> class gauge;
 
 template<>
 class instrumentation_export_ gauge<bool> final
-: public hierarchy
+: public basic_metric
 {
  public:
   using fn_type = std::function<bool()>;
 
-  gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
-  : hierarchy(local_name, std::move(t)),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
-
-  gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
-  : hierarchy(local_name, parent, std::move(t)),
+  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
+  : basic_metric(local_name, parent, t),
     fn_(std::move(fn))
   {
     this->enable();
@@ -49,20 +44,13 @@ class instrumentation_export_ gauge<bool> final
 
 template<>
 class instrumentation_export_ gauge<std::int64_t> final
-: public hierarchy
+: public basic_metric
 {
  public:
   using fn_type = std::function<std::int64_t()>;
 
-  gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
-  : hierarchy(local_name, std::move(t)),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
-
-  gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
-  : hierarchy(local_name, parent, std::move(t)),
+  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
+  : basic_metric(local_name, parent, std::move(t)),
     fn_(std::move(fn))
   {
     this->enable();
@@ -83,20 +71,14 @@ class instrumentation_export_ gauge<std::int64_t> final
 
 template<>
 class instrumentation_export_ gauge<double> final
-: public hierarchy
+: public basic_metric
 {
  public:
   using fn_type = std::function<double()>;
 
-  gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
-  : hierarchy(local_name, std::move(t)),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
-
-  gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
-  : hierarchy(local_name, parent, std::move(t)),
+  template<std::size_t N>
+  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
+  : basic_metric(local_name, parent, std::move(t)),
     fn_(std::move(fn))
   {
     this->enable();
@@ -117,20 +99,14 @@ class instrumentation_export_ gauge<double> final
 
 template<>
 class instrumentation_export_ gauge<std::string> final
-: public hierarchy
+: public basic_metric
 {
  public:
   using fn_type = std::function<std::string()>;
 
-  gauge(std::string_view local_name, fn_type fn, class tags t = {}) noexcept
-  : hierarchy(local_name, std::move(t)),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
-
-  gauge(std::string_view local_name, fn_type fn, group& parent, class tags t = {}) noexcept
-  : hierarchy(local_name, parent, std::move(t)),
+  template<std::size_t N>
+  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
+  : basic_metric(local_name, parent, std::move(t)),
     fn_(std::move(fn))
   {
     this->enable();

@@ -4,6 +4,7 @@
 namespace instrumentation {
 
 
+class basic_metric;
 class group;
 class counter;
 template<typename> class gauge;

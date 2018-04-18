@@ -24,11 +24,11 @@ auto visitor::on_destroy_visitor(std::unique_ptr<visitor> vptr)
 }
 
 
-auto hierarchy::visit_before_destroy_(const hierarchy& h) noexcept
+auto basic_metric::visit_before_destroy_() noexcept
 -> void {
   try {
     std::lock_guard<std::mutex> lck{ odv_mtx };
-    if (odv_ptr != nullptr) h.visit(*odv_ptr);
+    if (odv_ptr != nullptr) visit(*odv_ptr);
   } catch (const std::exception& ex) {
     std::cerr << "on-destroy visitor for hierarchy threw exception: " << ex.what() << "\n";
   } catch (...) {

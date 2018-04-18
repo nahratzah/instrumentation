@@ -8,6 +8,7 @@
 #include <vector>
 #include <instrumentation/tags.h>
 #include <instrumentation/visitor.h>
+#include <instrumentation/fwd.h>
 #include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
@@ -16,6 +17,7 @@ namespace instrumentation {
 class instrumentation_export_ group {
  public:
   class subgroup_set;
+  friend class instrumentation::basic_metric;
 
   explicit constexpr group(const std::string_view& local_name)
   : local_name(local_name),
@@ -45,9 +47,17 @@ class instrumentation_export_ group {
   const std::string_view local_name;
 
  private:
+  instrumentation_local_
   auto add_(group& g, std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
+  instrumentation_local_
   auto erase_(group& g, std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
+  instrumentation_local_
+  auto add_(basic_metric& g) noexcept -> void;
+  instrumentation_local_
+  auto erase_(basic_metric& g) noexcept -> void;
+  instrumentation_local_
   auto maybe_enable_(std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
+  instrumentation_local_
   auto maybe_disable_(std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
   virtual auto apply_local_tags_(tag_map& map) const -> void = 0;
 
