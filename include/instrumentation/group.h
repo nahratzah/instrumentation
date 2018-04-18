@@ -4,44 +4,126 @@
 #include <cassert>
 #include <cstddef>
 #include <mutex>
-#include <instrumentation/hierarchy.h>
+#include <string_view>
+#include <vector>
+#include <instrumentation/tags.h>
+#include <instrumentation/visitor.h>
 #include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
 
 
-class instrumentation_export_ group final
-: public hierarchy
+class instrumentation_export_ group {
+ public:
+  class subgroup_set;
+
+  explicit constexpr group(const std::string_view& local_name)
+  : local_name(local_name),
+    parent_(nullptr)
+  {}
+
+  explicit constexpr group(const std::string_view& local_name, group& parent)
+  : local_name(local_name),
+    parent_(&parent)
+  {}
+
+ protected:
+  explicit constexpr group(const group& y) noexcept
+  : local_name(y.local_name),
+    parent_(y.parent_)
+  {}
+
+ public:
+  auto visit(visitor& v) const -> void;
+  static auto mtx() noexcept -> std::recursive_mutex&;
+  constexpr auto childgroups() const noexcept -> subgroup_set;
+
+  auto name() const -> std::vector<std::string_view>;
+  auto tags() const -> tag_map;
+  auto tags(tag_map& tag_set) const -> tag_map&;
+
+  const std::string_view local_name;
+
+ private:
+  auto add_(group& g, std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
+  auto erase_(group& g, std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
+  auto maybe_enable_(std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
+  auto maybe_disable_(std::unique_lock<std::recursive_mutex>& lck) noexcept -> void;
+  virtual auto apply_local_tags_(tag_map& map) const -> void = 0;
+
+  group*const parent_;
+  mutable group* child_groups_ = nullptr;
+  mutable group* sibling_ = nullptr;
+  mutable bool enabled_ = false;
+};
+
+template<std::size_t N>
+class tagged_group
+: public group
 {
+  template<std::size_t> friend class tagged_group;
+
+ public:
+  template<std::size_t NN = N, typename = std::enable_if_t<(NN == 0)>>
+  explicit constexpr tagged_group(std::string_view local_name) noexcept
+  : group(local_name)
+  {}
+
+  template<std::size_t NN = N, typename = std::enable_if_t<(NN == 0)>>
+  explicit constexpr tagged_group(std::string_view local_name, group& parent) noexcept
+  : group(local_name, parent)
+  {}
+
+ private:
+  template<std::size_t NN = N, typename = std::enable_if_t<(NN > 0)>>
+  constexpr tagged_group(tagged_group<N - 1>&& base, const tag_entry& entry)
+  : group(std::move(base)),
+    tag_set_(base.tag_set_ | entry)
+  {}
+
+ public:
+  constexpr auto operator[](const tag_entry& entry) &&
+  -> tagged_group<N + 1> {
+    return tagged_group<N + 1>(std::move(*this), entry);
+  }
+
+ private:
+  auto apply_local_tags_(tag_map& map) const -> void /*override*/ {
+    tag_set_.apply(map);
+  }
+
+  tags_<N> tag_set_;
+};
+
+constexpr auto make_group(std::string_view local_name)
+-> tagged_group<0> {
+  return tagged_group<0>{ local_name };
+}
+
+constexpr auto make_group(std::string_view local_name, group& parent)
+-> tagged_group<0> {
+  return tagged_group<0>{ local_name, parent };
+}
+
+struct group::subgroup_set {
  public:
   class iterator;
-
-  using hierarchy::hierarchy;
-  ~group() noexcept override;
-
-  auto add(hierarchy& g) noexcept -> void;
-  auto erase(hierarchy& g) noexcept -> void;
-
-  auto visit(visitor& v) const -> void override;
 
   auto begin() const noexcept -> iterator;
   constexpr auto end() const noexcept -> iterator;
 
-  mutable std::mutex mtx;
-
- private:
-  hierarchy* child_ = nullptr; // Protected by mtx_
+  const group* self_ = nullptr;
 };
 
-class instrumentation_local_ group::iterator {
+class instrumentation_local_ group::subgroup_set::iterator {
  public:
   using difference_type = std::ptrdiff_t;
-  using value_type = hierarchy;
-  using pointer = const hierarchy*;
-  using reference = const hierarchy&;
+  using value_type = group;
+  using pointer = const group*;
+  using reference = const group&;
   using iterator_category = std::forward_iterator_tag;
 
-  explicit constexpr iterator(const hierarchy* child) noexcept
+  explicit constexpr iterator(const group* child) noexcept
   : child_(child)
   {}
 
@@ -79,15 +161,21 @@ class instrumentation_local_ group::iterator {
   }
 
  private:
-  const hierarchy* child_;
+  const group* child_;
 };
 
-inline auto group::begin() const noexcept -> iterator {
-  return iterator(child_);
+inline auto group::subgroup_set::begin() const noexcept -> iterator {
+  return iterator(self_->child_groups_);
 }
 
-constexpr auto group::end() const noexcept -> iterator {
+constexpr auto group::subgroup_set::end() const noexcept -> iterator {
   return iterator(nullptr);
+}
+
+constexpr auto group::childgroups() const
+noexcept
+-> subgroup_set {
+  return subgroup_set{ this };
 }
 
 
