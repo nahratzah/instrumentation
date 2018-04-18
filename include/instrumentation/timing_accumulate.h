@@ -2,28 +2,24 @@
 #define INSTRUMENTATION_TIMING_ACCUMULATE_H
 
 #include <instrumentation/instrumentation_export_.h>
-#include <instrumentation/hierarchy.h>
+#include <instrumentation/basic_metric.h>
 #include <instrumentation/time_track.h>
 #include <chrono>
+#include <cstddef>
 
 namespace instrumentation {
 
 
 class instrumentation_export_ timing_accumulate final
-: public hierarchy
+: public basic_metric
 {
  public:
   using clock_type = std::chrono::high_resolution_clock;
   using duration = clock_type::duration;
 
-  timing_accumulate(std::string_view local_name, class tags t = {}) noexcept
-  : hierarchy(local_name, std::move(t))
-  {
-    this->enable();
-  }
-
-  timing_accumulate(std::string_view local_name, group& parent, class tags t = {}) noexcept
-  : hierarchy(local_name, parent, std::move(t))
+  template<std::size_t N = 0>
+  timing_accumulate(std::string_view local_name, group& parent, const tag_map& t = {}) noexcept
+  : basic_metric(local_name, parent, t)
   {
     this->enable();
   }

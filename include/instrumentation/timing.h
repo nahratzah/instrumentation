@@ -2,7 +2,7 @@
 #define INSTRUMENTATION_TIMING_H
 
 #include <instrumentation/instrumentation_export_.h>
-#include <instrumentation/hierarchy.h>
+#include <instrumentation/basic_metric.h>
 #include <instrumentation/time_track.h>
 #include <chrono>
 #include <cstddef>
@@ -12,7 +12,7 @@ namespace instrumentation {
 
 
 class instrumentation_export_ timing final
-: public hierarchy
+: public basic_metric
 {
  private:
   using atom_vector = std::vector<std::atomic<std::uint64_t>>;
@@ -36,11 +36,18 @@ class instrumentation_export_ timing final
     return duration::max();
   }
 
-  timing(std::string_view local_name, duration resolution = dfl_resolution, std::size_t buckets = dfl_buckets, class tags t = {}) noexcept;
-  timing(std::string_view local_name, duration resolution, std::size_t buckets, group& parent, class tags t = {}) noexcept;
+  template<std::size_t N = 0>
+  timing(std::string_view local_name, duration resolution, std::size_t buckets, group& parent, const tag_map& t = {}) noexcept
+  : basic_metric(local_name, parent, t),
+    timings_(buckets + 1u),
+    resolution_(resolution)
+  {
+    this->enable();
+  }
 
-  timing(std::string_view local_name, group& parent, class tags t = {}) noexcept
-  : timing(local_name, dfl_resolution, dfl_buckets, parent, std::move(t))
+  template<std::size_t N = 0>
+  timing(std::string_view local_name, group& parent, const tag_map& t = {}) noexcept
+  : timing(local_name, dfl_resolution, dfl_buckets, parent, t)
   {}
 
   ~timing() noexcept override;

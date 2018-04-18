@@ -4,25 +4,21 @@
 ///\file
 ///\ingroup instrumentation
 
+#include <cstddef>
 #include <cstdint>
-#include <instrumentation/hierarchy.h>
+#include <instrumentation/basic_metric.h>
+#include <instrumentation/tags.h>
 #include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
 
 
 class instrumentation_export_ counter final
-: public hierarchy
+: public basic_metric
 {
  public:
-  counter(std::string_view local_name, class tags t = {}) noexcept
-  : hierarchy(local_name, std::move(t))
-  {
-    this->enable();
-  }
-
-  counter(std::string_view local_name, group& parent, class tags t = {}) noexcept
-  : hierarchy(local_name, parent, std::move(t))
+  counter(std::string_view local_name, group& parent, const tag_map& t = tag_map()) noexcept
+  : basic_metric(local_name, parent, t)
   {
     this->enable();
   }
@@ -32,7 +28,6 @@ class instrumentation_export_ counter final
   auto operator++()
   noexcept
   -> void {
-    enable();
     value_.fetch_add(1u, std::memory_order_relaxed);
   }
 

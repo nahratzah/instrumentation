@@ -21,7 +21,7 @@ endif()
 set(headers
     include/instrumentation/instrumentation_export_.h
     include/instrumentation/group.h
-    include/instrumentation/hierarchy.h
+    include/instrumentation/basic_metric.h
     include/instrumentation/tags.h
     include/instrumentation/visitor.h
     include/instrumentation/counter.h
@@ -38,7 +38,7 @@ add_library (instrumentation
     src/group.cc
     src/visitor.cc
     src/tags.cc
-    src/hierarchy.cc
+    src/basic_metric.cc
     src/on_destroy_visitor.cc
     src/counter.cc
     src/gauge.cc

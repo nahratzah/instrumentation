@@ -89,20 +89,18 @@ auto print_visitor::operator()(const timing_accumulate& t)
 #endif
 }
 
-auto print_visitor::print_name_(const hierarchy& h)
+auto print_visitor::print_name_(const basic_metric& h)
 -> void {
-  auto name = h.name();
   bool first = true;
-  for (std::string_view name_element : name)
+  for (std::string_view name_element : h.name)
     out_ << (std::exchange(first, false) ? "" : ".") << name_element;
 }
 
-auto print_visitor::print_tags_(const hierarchy& h)
+auto print_visitor::print_tags_(const basic_metric& h)
 -> void {
-  std::vector<std::pair<tags::map_type::key_type, tags::map_type::mapped_type>> values;
+  std::vector<std::pair<tag_map::key_type, tag_map::mapped_type>> values;
   {
-    auto t = h.tags();
-    std::copy(t.begin(), t.end(), std::back_inserter(values));
+    std::copy(h.tags.begin(), h.tags.end(), std::back_inserter(values));
     std::sort(values.begin(), values.end(),
         [](const auto& x, const auto& y) { return x.first < y.first; });
   }

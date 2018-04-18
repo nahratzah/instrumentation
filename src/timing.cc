@@ -5,22 +5,6 @@
 namespace instrumentation {
 
 
-timing::timing(std::string_view local_name, duration resolution, std::size_t buckets, class tags t) noexcept
-: hierarchy(local_name, std::move(t)),
-  timings_(buckets + 1u),
-  resolution_(resolution)
-{
-  this->enable();
-}
-
-timing::timing(std::string_view local_name, duration resolution, std::size_t buckets, group& parent, class tags t) noexcept
-: hierarchy(local_name, parent, std::move(t)),
-  timings_(buckets + 1u),
-  resolution_(resolution)
-{
-  this->enable();
-}
-
 timing::~timing() noexcept {
   disable();
 }

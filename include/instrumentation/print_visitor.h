@@ -3,7 +3,7 @@
 
 #include <instrumentation/instrumentation_export_.h>
 #include <instrumentation/visitor.h>
-#include <instrumentation/hierarchy.h>
+#include <instrumentation/basic_metric.h>
 #include <instrumentation/fwd.h>
 #include <iosfwd>
 
@@ -31,8 +31,8 @@ class instrumentation_export_ print_visitor final
   auto operator()(const timing_accumulate& t) -> void override;
 
  private:
-  instrumentation_local_ auto print_name_(const hierarchy& h) -> void;
-  instrumentation_local_ auto print_tags_(const hierarchy& h) -> void;
+  instrumentation_local_ auto print_name_(const basic_metric& h) -> void;
+  instrumentation_local_ auto print_tags_(const basic_metric& h) -> void;
 
   std::ostream& out_;
 };
