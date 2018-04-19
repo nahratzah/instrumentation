@@ -16,6 +16,8 @@ namespace instrumentation {
 
 using tag_value = std::variant<bool, std::int64_t, std::string_view>;
 using tag_map = std::unordered_map<std::string_view, std::variant<bool, std::int64_t, std::string_view, std::string>>;
+instrumentation_export_
+extern const std::string_view tls_entry_key;
 
 struct tag_entry {
   std::string_view name;
