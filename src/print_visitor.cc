@@ -52,6 +52,11 @@ auto print_visitor::operator()(const gauge<std::string>& g)
 
 auto print_visitor::operator()(const timing& t)
 -> void {
+  using tdelta = std::chrono::duration<double, std::milli>;
+
+  tdelta total_lo(0), total_hi(0);
+  std::uint64_t total_count(0);
+
   print_name_(t);
   print_tags_(t);
   out_ << " = {";
@@ -59,20 +64,20 @@ auto print_visitor::operator()(const timing& t)
   for (timing::bucket b : t) {
     if (b.count == 0) continue; // Don't print zeroes, they're distracting.
 
-#if 1 // Change to '__cplusplus < ...' when C++20 gets a version number.
-    using tdelta = std::chrono::duration<double, std::milli>;
     tdelta lo(b.lo);
     tdelta hi(b.hi);
 
+    total_count += b.count;
+    total_lo += lo * b.count;
+    total_hi += hi * b.count;
+
     out_ << (std::exchange(first, false) ? "" : ", ")
         << lo.count() << "ms" << "-" << hi.count() << "ms" << "=" << b.count;
-#else
-    out_ << (std::exchange(first, false) ? "" : ", ")
-        << b.lo << "-" << b.hi << "=" << b.count;
-#endif
-
   }
-  out_ << "}\n";
+  out_ << "} (total "
+      << total_lo.count() << "ms .. "
+      << total_hi.count() << "ms over "
+      << total_count << " events)\n";
 }
 
 auto print_visitor::operator()(const timing_accumulate& t)
