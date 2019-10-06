@@ -1,128 +1,54 @@
 #ifndef INSTRUMENTATION_GAUGE_H
 #define INSTRUMENTATION_GAUGE_H
 
-#include <cstddef>
-#include <cstdint>
+#include <initializer_list>
+#include <memory>
+#include <string>
 #include <string_view>
-#include <functional>
-#include <instrumentation/basic_metric.h>
 #include <instrumentation/tags.h>
-#include <instrumentation/visitor.h>
-#include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
 
 
-template<typename> class gauge;
+class gauge_intf {
+  protected:
+  virtual ~gauge_intf() noexcept;
 
-template<>
-class instrumentation_export_ gauge<bool> final
-: public basic_metric
-{
- public:
-  using fn_type = std::function<bool()>;
+  public:
+  void inc() noexcept;
+  void inc(double d) noexcept;
+  void dec() noexcept;
+  void dec(double d) noexcept;
+  void set(double d) noexcept;
 
-  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
-  : basic_metric(local_name, parent, t),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
-
-  ~gauge() noexcept override;
-
-  auto visit(visitor& v) const -> void override;
-
-  auto operator*() const
-  -> bool {
-    return fn_();
-  }
-
- private:
-  fn_type fn_;
+  private:
+  virtual void do_inc(double d) noexcept = 0;
+  virtual void do_set(double d) noexcept = 0;
 };
 
-template<>
-class instrumentation_export_ gauge<std::int64_t> final
-: public basic_metric
-{
- public:
-  using fn_type = std::function<std::int64_t()>;
 
-  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
-  : basic_metric(local_name, parent, std::move(t)),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
+class gauge {
+  public:
+  gauge() = default;
 
-  ~gauge() noexcept override;
+  explicit gauge(std::string_view name);
+  gauge(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags);
+  gauge(std::string_view name, instrumentation::tags tags);
 
-  auto visit(visitor& v) const -> void override;
+  gauge(std::shared_ptr<gauge_intf> impl) noexcept
+  : impl_(std::move(impl))
+  {}
 
-  auto operator*() const
-  -> std::int64_t {
-    return fn_();
-  }
+  void operator++() const noexcept;
+  void operator++(int) const noexcept;
+  void operator--() const noexcept;
+  void operator--(int) const noexcept;
+  void operator+=(double d) const noexcept;
+  void operator-=(double d) const noexcept;
+  void operator=(double d) const noexcept;
 
- private:
-  fn_type fn_;
-};
-
-template<>
-class instrumentation_export_ gauge<double> final
-: public basic_metric
-{
- public:
-  using fn_type = std::function<double()>;
-
-  template<std::size_t N>
-  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
-  : basic_metric(local_name, parent, std::move(t)),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
-
-  ~gauge() noexcept override;
-
-  auto visit(visitor& v) const -> void override;
-
-  auto operator*() const
-  -> double {
-    return fn_();
-  }
-
- private:
-  fn_type fn_;
-};
-
-template<>
-class instrumentation_export_ gauge<std::string> final
-: public basic_metric
-{
- public:
-  using fn_type = std::function<std::string()>;
-
-  template<std::size_t N>
-  gauge(std::string_view local_name, fn_type fn, group& parent, const tag_map& t = {}) noexcept
-  : basic_metric(local_name, parent, std::move(t)),
-    fn_(std::move(fn))
-  {
-    this->enable();
-  }
-
-  ~gauge() noexcept override;
-
-  auto visit(visitor& v) const -> void override;
-
-  auto operator*() const
-  -> std::string {
-    return fn_();
-  }
-
- private:
-  fn_type fn_;
+  private:
+  std::shared_ptr<gauge_intf> impl_;
 };
 
 

@@ -21,34 +21,29 @@ else()
 endif()
 
 set(headers
-    include/instrumentation/basic_metric.h
     include/instrumentation/counter.h
-    include/instrumentation/fwd.h
+    include/instrumentation/engine.h
     include/instrumentation/gauge.h
-    include/instrumentation/group.h
-    include/instrumentation/instrumentation_export_.h
-    include/instrumentation/print_visitor.h
+    include/instrumentation/multi_engine.h
+    include/instrumentation/path.h
+    include/instrumentation/prometheus_engine.h
+    include/instrumentation/string.h
     include/instrumentation/tags.h
-    include/instrumentation/time_track.h
     include/instrumentation/timing.h
-    include/instrumentation/timing_accumulate.h
-    include/instrumentation/visitor.h
     )
 set(headers_detail
     )
 
 include_directories (include)
 add_library (instrumentation
-    src/group.cc
-    src/visitor.cc
-    src/tags.cc
-    src/basic_metric.cc
-    src/on_destroy_visitor.cc
     src/counter.cc
+    src/engine.cc
     src/gauge.cc
+    src/multi_engine.cc
+    src/path.cc
+    src/prometheus_engine.cc
+    src/string.cc
     src/timing.cc
-    src/timing_accumulate.cc
-    src/print_visitor.cc
     )
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
 set_property (TARGET instrumentation PROPERTY SOVERSION "0.0")

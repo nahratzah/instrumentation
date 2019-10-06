@@ -57,7 +57,7 @@ class time_track {
 
   ~time_track() noexcept {
     if (active_) pause();
-    metric_.add(inactive_);
+    metric_ << inactive_;
   }
 
   auto pause() noexcept {

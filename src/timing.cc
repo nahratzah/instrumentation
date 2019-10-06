@@ -1,29 +1,38 @@
 #include <instrumentation/timing.h>
-#include <cassert>
-#include <cstddef>
+#include <instrumentation/engine.h>
 
 namespace instrumentation {
 
 
-timing::~timing() noexcept {
-  disable();
+timing_intf::~timing_intf() noexcept = default;
+
+void timing_intf::add(duration d) noexcept {
+  do_add(d);
 }
 
-auto timing::visit(visitor& v) const
--> void {
-  v(*this);
+
+timing::timing(std::string_view name, duration resolution, std::size_t buckets)
+: timing(engine::global().new_timing(name, resolution, buckets))
+{}
+
+timing::timing(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags, duration resolution, std::size_t buckets)
+: timing(name, instrumentation::tags(tags), resolution, buckets)
+{}
+
+timing::timing(std::string_view name, instrumentation::tags tags, duration resolution, std::size_t buckets)
+: timing(engine::global().new_timing(name, std::move(tags), resolution, buckets))
+{}
+
+auto timing::cumulative(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags) -> timing {
+  return cumulative(name, instrumentation::tags(tags));
 }
 
-auto timing::add(duration d)
-noexcept
--> void {
-  assert(resolution_ > duration(0));
+auto timing::cumulative(std::string_view name, instrumentation::tags tags) -> timing {
+  return engine::global().new_cumulative_timing(name, std::move(tags));
+}
 
-  std::size_t idx = d / resolution_;
-  if (d < duration(0)) idx = 0;
-  if (idx >= timings_.size()) idx = timings_.size() - 1u;
-
-  timings_[idx].fetch_add(1u, std::memory_order_relaxed);
+void timing::operator<<(duration d) const noexcept {
+  if (impl_) impl_->add(d);
 }
 
 

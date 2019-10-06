@@ -1,138 +1,59 @@
 #ifndef INSTRUMENTATION_TIMING_H
 #define INSTRUMENTATION_TIMING_H
 
-#include <instrumentation/instrumentation_export_.h>
-#include <instrumentation/basic_metric.h>
-#include <instrumentation/time_track.h>
 #include <chrono>
 #include <cstddef>
-#include <atomic>
+#include <initializer_list>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <instrumentation/tags.h>
 
 namespace instrumentation {
 
 
-class instrumentation_export_ timing final
-: public basic_metric
-{
- private:
-  using atom_vector = std::vector<std::atomic<std::uint64_t>>;
-
- public:
+class timing_intf {
+  public:
   using clock_type = std::chrono::high_resolution_clock;
   using duration = clock_type::duration;
+
+  protected:
+  virtual ~timing_intf() noexcept;
+
+  public:
+  void add(duration d) noexcept;
+
+  private:
+  virtual void do_add(duration d) noexcept = 0;
+};
+
+
+class timing {
+  public:
+  using clock_type = timing_intf::clock_type;
+  using duration = timing_intf::duration;
+
   static constexpr std::chrono::milliseconds dfl_resolution{1};
   static constexpr std::size_t dfl_buckets = std::chrono::seconds{1} / dfl_resolution;
 
-  class iterator;
+  timing() = default;
 
-  struct bucket {
-    duration lo, hi;
-    std::uint64_t count;
-  };
+  explicit timing(std::string_view name, duration resolution = dfl_resolution, std::size_t buckets = dfl_buckets);
+  timing(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags, duration resolution = dfl_resolution, std::size_t buckets = dfl_buckets);
+  timing(std::string_view name, instrumentation::tags tags, duration resolution = dfl_resolution, std::size_t buckets = dfl_buckets);
 
-  static constexpr auto max()
-  noexcept
-  -> duration {
-    return duration::max();
-  }
+  static auto cumulative(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags = {}) -> timing;
+  static auto cumulative(std::string_view name, instrumentation::tags tags) -> timing;
 
-  template<std::size_t N = 0>
-  timing(std::string_view local_name, duration resolution, std::size_t buckets, group& parent, const tag_map& t = {}) noexcept
-  : basic_metric(local_name, parent, t),
-    timings_(buckets + 1u),
-    resolution_(resolution)
-  {
-    this->enable();
-  }
-
-  template<std::size_t N = 0>
-  timing(std::string_view local_name, group& parent, const tag_map& t = {}) noexcept
-  : timing(local_name, dfl_resolution, dfl_buckets, parent, t)
+  timing(std::shared_ptr<timing_intf> impl) noexcept
+  : impl_(std::move(impl))
   {}
 
-  ~timing() noexcept override;
+  void operator<<(duration d) const noexcept;
 
-  auto visit(visitor& v) const -> void override;
-
-  auto add(duration d) noexcept -> void;
-
-  auto begin() const noexcept -> iterator;
-  auto end() const noexcept -> iterator;
-
-  template<typename Fn, typename... Args>
-  auto measure(Fn&& fn, Args&&... args)
-  -> decltype(std::invoke(std::declval<Fn>(), std::declval<Args>()...));
-
- private:
-  atom_vector timings_;
-  duration resolution_;
+  private:
+  std::shared_ptr<timing_intf> impl_;
 };
-
-class instrumentation_local_ timing::iterator {
- public:
-  using difference_type = std::ptrdiff_t;
-  using value_type = timing::bucket;
-  using reference = timing::bucket;
-  using pointer = void;
-  using iterator_category = std::input_iterator_tag;
-
-  iterator(duration lo, duration resolution, atom_vector::const_iterator iter) noexcept
-  : lo_(lo),
-    resolution_(resolution),
-    iter_(iter)
-  {}
-
-  auto operator++()
-  -> iterator& {
-    lo_ += resolution_;
-    ++iter_;
-    return *this;
-  }
-
-  auto operator++(int)
-  -> iterator {
-    iterator copy = *this;
-    ++*this;
-    return copy;
-  }
-
-  auto operator==(const iterator& y) const
-  noexcept
-  -> bool {
-    return iter_ == y.iter_;
-  }
-
-  auto operator!=(const iterator& y) const
-  noexcept
-  -> bool {
-    return !(*this == y);
-  }
-
-  auto operator*() const
-  -> reference {
-    return bucket{ lo_, lo_ + resolution_, iter_->load(std::memory_order_relaxed) };
-  }
-
- private:
-  duration lo_;
-  duration resolution_;
-  atom_vector::const_iterator iter_;
-};
-
-inline auto timing::begin() const noexcept -> iterator {
-  return iterator(duration(0), resolution_, timings_.begin());
-}
-
-inline auto timing::end() const noexcept -> iterator {
-  return iterator(timings_.size() * resolution_, resolution_, timings_.end());
-}
-
-template<typename Fn, typename... Args>
-auto timing::measure(Fn&& fn, Args&&... args)
--> decltype(std::invoke(std::declval<Fn>(), std::declval<Args>()...)) {
-  time_track<timing> tt{ *this };
-  return std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...);
-}
 
 
 } /* namespace instrumentation */

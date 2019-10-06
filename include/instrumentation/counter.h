@@ -1,52 +1,46 @@
 #ifndef INSTRUMENTATION_COUNTER_H
 #define INSTRUMENTATION_COUNTER_H
 
-///\file
-///\ingroup instrumentation
-
-#include <cstddef>
-#include <cstdint>
-#include <instrumentation/basic_metric.h>
+#include <initializer_list>
+#include <memory>
+#include <string>
+#include <string_view>
 #include <instrumentation/tags.h>
-#include <instrumentation/instrumentation_export_.h>
 
 namespace instrumentation {
 
 
-class instrumentation_export_ counter final
-: public basic_metric
-{
- public:
-  counter(std::string_view local_name, group& parent, const tag_map& t = tag_map()) noexcept
-  : basic_metric(local_name, parent, t)
-  {
-    this->enable();
-  }
+class counter_intf {
+  protected:
+  virtual ~counter_intf() noexcept;
 
-  ~counter() noexcept override;
+  public:
+  void inc() noexcept;
+  void inc(double d) noexcept;
 
-  auto operator++()
-  noexcept
-  -> void {
-    value_.fetch_add(1u, std::memory_order_relaxed);
-  }
+  private:
+  virtual void do_inc(double d) noexcept = 0;
+};
 
-  auto operator++(int)
-  noexcept
-  -> void {
-    ++*this;
-  }
 
-  auto operator*() const
-  noexcept
-  -> std::uintmax_t {
-    return value_.load(std::memory_order_relaxed);
-  }
+class counter {
+  public:
+  counter() = default;
 
-  auto visit(visitor& v) const -> void override;
+  explicit counter(std::string_view name);
+  counter(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags);
+  counter(std::string_view name, instrumentation::tags tags);
 
- private:
-  std::atomic<std::uintmax_t> value_{ 0u };
+  counter(std::shared_ptr<counter_intf> impl) noexcept
+  : impl_(std::move(impl))
+  {}
+
+  void operator++() const noexcept;
+  void operator++(int) const noexcept;
+  void operator+=(double d) const noexcept;
+
+  private:
+  std::shared_ptr<counter_intf> impl_;
 };
 
 
