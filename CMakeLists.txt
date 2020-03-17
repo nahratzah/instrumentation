@@ -29,6 +29,7 @@ set(headers
     include/instrumentation/prometheus_engine.h
     include/instrumentation/string.h
     include/instrumentation/tags.h
+    include/instrumentation/time_track.h
     include/instrumentation/timing.h
     )
 set(headers_detail
