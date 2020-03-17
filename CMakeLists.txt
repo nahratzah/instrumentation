@@ -3,7 +3,7 @@ project (instrumentation)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-set(INSTRUMENTATION_VERSION_MAJOR 0 CACHE STRING "major version" FORCE)
+set(INSTRUMENTATION_VERSION_MAJOR 1 CACHE STRING "major version" FORCE)
 set(INSTRUMENTATION_VERSION_MINOR 0 CACHE STRING "minor version" FORCE)
 set(INSTRUMENTATION_VERSION ${INSTRUMENTATION_VERSION_MAJOR}.${INSTRUMENTATION_VERSION_MINOR} CACHE STRING "version" FORCE)
 
@@ -46,7 +46,7 @@ add_library (instrumentation
     src/timing.cc
     )
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
-set_property (TARGET instrumentation PROPERTY SOVERSION "0.0")
+set_property (TARGET instrumentation PROPERTY SOVERSION "1.0")
 
 find_package (Boost COMPONENTS context REQUIRED)
 target_link_libraries (instrumentation INTERFACE ${Boost_CONTEXT_LIBRARY})
