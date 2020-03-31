@@ -1,5 +1,7 @@
 #include <instrumentation/prometheus_engine.h>
 #include <algorithm>
+#include <atomic>
+#include <cassert>
 #include <cmath>
 #include <iterator>
 #include <map>

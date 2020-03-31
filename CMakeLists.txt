@@ -49,8 +49,6 @@ add_library (instrumentation
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
 set_property (TARGET instrumentation PROPERTY SOVERSION "1.0")
 
-find_package (Boost COMPONENTS context REQUIRED)
-target_link_libraries (instrumentation INTERFACE ${Boost_CONTEXT_LIBRARY})
 find_package (Threads REQUIRED)
 if(CMAKE_USE_PTHREADS_INIT)
   target_link_libraries(instrumentation INTERFACE ${CMAKE_THREAD_LIBS_INIT})
@@ -58,8 +56,7 @@ endif()
 
 target_include_directories(instrumentation INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-    ${Boost_INCLUDE_DIR})
+    $<INSTALL_INTERFACE:include>)
 
 install(FILES ${headers} DESTINATION "include/instrumentation")
 install(FILES ${headers_detail} DESTINATION "include/instrumentation/detail")
@@ -71,7 +68,7 @@ install(FILES instrumentation-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/instrumen
 
 add_subdirectory (test)
 
-find_package(Doxygen REQUIRED mscgen OPTIONAL_COMPONENTS dot)
+find_package(Doxygen COMPONENTS mscgen OPTIONAL_COMPONENTS dot)
 
 if(DOXYGEN_FOUND)
   set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "README.md")
