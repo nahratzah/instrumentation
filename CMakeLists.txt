@@ -4,7 +4,7 @@ project (instrumentation)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 set(INSTRUMENTATION_VERSION_MAJOR 1 CACHE STRING "major version" FORCE)
-set(INSTRUMENTATION_VERSION_MINOR 0 CACHE STRING "minor version" FORCE)
+set(INSTRUMENTATION_VERSION_MINOR 1 CACHE STRING "minor version" FORCE)
 set(INSTRUMENTATION_VERSION ${INSTRUMENTATION_VERSION_MAJOR}.${INSTRUMENTATION_VERSION_MINOR} CACHE STRING "version" FORCE)
 
 enable_testing()
@@ -47,7 +47,6 @@ add_library (instrumentation
     src/timing.cc
     )
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
-set_property (TARGET instrumentation PROPERTY SOVERSION "1.0")
 
 find_package (Threads REQUIRED)
 if(CMAKE_USE_PTHREADS_INIT)
