@@ -81,6 +81,10 @@ inline auto tags::data() const noexcept -> const std::unordered_map<std::string,
   return tags_;
 }
 
+inline auto tags::data() noexcept -> std::unordered_map<std::string, tag_value>& {
+  return tags_;
+}
+
 inline auto tags::empty() const noexcept -> bool {
   return data().empty();
 }

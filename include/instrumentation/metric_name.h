@@ -65,6 +65,10 @@ inline auto metric_name::data() const noexcept -> const std::vector<std::string>
   return elements;
 }
 
+inline auto metric_name::data() noexcept -> std::vector<std::string>& {
+  return elements;
+}
+
 
 } /* namespace instrumentation */
 
