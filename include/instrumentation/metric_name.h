@@ -1,5 +1,5 @@
-#ifndef INSTRUMENTATION_PATH_H
-#define INSTRUMENTATION_PATH_H
+#ifndef INSTRUMENTATION_METRIC_NAME_H
+#define INSTRUMENTATION_METRIC_NAME_H
 
 #include <initializer_list>
 #include <string>
@@ -14,13 +14,13 @@ namespace instrumentation {
  * \details
  * A metric name is a sequence of path elements, forming a path.
  */
-class path {
+class metric_name {
   public:
   ///\brief Construct an empty path.
-  path() = default;
+  metric_name() = default;
 
   ///\brief Construct a path with the given path elements.
-  path(std::initializer_list<std::string> elements);
+  metric_name(std::initializer_list<std::string> elements);
 
   /**
    * \brief Construct a path from a strring.
@@ -31,7 +31,7 @@ class path {
    *
    * \param path String representation of a path.
    */
-  path(std::string_view path);
+  metric_name(std::string_view path);
 
   ///\brief Render the path using the given separator between path components.
   auto with_separator(std::string_view sep = ".") const -> std::string;
@@ -46,19 +46,19 @@ class path {
 };
 
 
-inline path::path(std::initializer_list<std::string> elements)
+inline metric_name::metric_name(std::initializer_list<std::string> elements)
 : elements(elements)
 {}
 
-inline auto path::empty() const noexcept -> bool {
+inline auto metric_name::empty() const noexcept -> bool {
   return data().empty();
 }
 
-inline auto path::data() const noexcept -> const std::vector<std::string>& {
+inline auto metric_name::data() const noexcept -> const std::vector<std::string>& {
   return elements;
 }
 
 
 } /* namespace instrumentation */
 
-#endif /* INSTRUMENTATION_PATH_H */
+#endif /* INSTRUMENTATION_METRIC_NAME_H */

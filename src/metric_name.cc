@@ -1,9 +1,9 @@
-#include <instrumentation/path.h>
+#include <instrumentation/metric_name.h>
 
 namespace instrumentation {
 
 
-path::path(std::string_view path) {
+metric_name::metric_name(std::string_view path) {
   if (!path.empty()) {
     for (auto pos = path.find("."); pos != std::string_view::npos; pos = path.find(".")) {
       elements.emplace_back(path.begin(), path.begin() + pos);
@@ -14,7 +14,7 @@ path::path(std::string_view path) {
   }
 }
 
-auto path::with_separator(std::string_view sep) const -> std::string {
+auto metric_name::with_separator(std::string_view sep) const -> std::string {
   std::string result;
   const auto& d = data();
 

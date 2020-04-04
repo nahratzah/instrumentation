@@ -126,7 +126,7 @@ class prometheus_engine::collector_intf {
   {}
 
   public:
-  virtual void collect(std::ostream& out, const metric_name& name) const = 0;
+  virtual void collect(std::ostream& out, const prom_metric_name& name) const = 0;
 
   prom_type type;
 };
@@ -144,7 +144,7 @@ class prometheus_engine::metric_collector final
   : collector_intf(type)
   {}
 
-  void collect(std::ostream& out, const metric_name& name) const override {
+  void collect(std::ostream& out, const prom_metric_name& name) const override {
     flag_manager fm{ out };
     out << name.name;
     if (!name.tags.empty()) out << "\t{" << name.tags << "}";
@@ -181,7 +181,7 @@ class prometheus_engine::timing_collector
     buckets_(buckets)
   {}
 
-  void collect(std::ostream& out, const metric_name& name) const override {
+  void collect(std::ostream& out, const prom_metric_name& name) const override {
     using tdelta = std::chrono::duration<double>; // floating-point seconds
 
     flag_manager fm{ out };
@@ -245,7 +245,7 @@ class prometheus_engine::cumulative_timing_collector
   : collector_intf(prom_type::counter)
   {}
 
-  void collect(std::ostream& out, const metric_name& name) const override {
+  void collect(std::ostream& out, const prom_metric_name& name) const override {
     using tdelta = std::chrono::duration<double>; // floating-point seconds
 
     flag_manager fm{ out };
@@ -277,7 +277,7 @@ class prometheus_engine::functor_collector
     cb_(std::move(cb))
   {}
 
-  void collect(std::ostream& out, const metric_name& name) const override {
+  void collect(std::ostream& out, const prom_metric_name& name) const override {
     if (cb_ != nullptr) {
       flag_manager fm{ out };
       out << name.name;
@@ -337,7 +337,7 @@ auto prometheus_engine::quote_string(std::string_view s) -> std::string {
   return out;
 }
 
-auto prometheus_engine::path_to_string(const path& p) -> std::string {
+auto prometheus_engine::path_to_string(const metric_name& p) -> std::string {
   return fix_prom_name(p.with_separator("_"));
 }
 
@@ -381,7 +381,7 @@ auto prometheus_engine::tags_to_string(const tags& t) -> std::string {
   return oss.str();
 }
 
-void prometheus_engine::add_help(const path& p, std::string help) {
+void prometheus_engine::add_help(const metric_name& p, std::string help) {
   // Remove newline from help text.
   const auto newline_pos = help.find("\n");
   if (newline_pos != std::string::npos)
@@ -392,7 +392,7 @@ void prometheus_engine::add_help(const path& p, std::string help) {
   help_.emplace(path_to_string(p), std::move(help));
 }
 
-auto prometheus_engine::new_counter(path p, tags t) -> std::shared_ptr<counter_intf> {
+auto prometheus_engine::new_counter(metric_name p, tags t) -> std::shared_ptr<counter_intf> {
   auto result = std::make_shared<metric_collector>(prom_type::counter);
 
   std::lock_guard<std::shared_mutex> lck{ mtx_ };
@@ -406,7 +406,7 @@ auto prometheus_engine::new_counter(path p, tags t) -> std::shared_ptr<counter_i
   return result;
 }
 
-auto prometheus_engine::new_gauge(path p, tags t) -> std::shared_ptr<gauge_intf> {
+auto prometheus_engine::new_gauge(metric_name p, tags t) -> std::shared_ptr<gauge_intf> {
   auto result = std::make_shared<metric_collector>(prom_type::gauge);
 
   std::lock_guard<std::shared_mutex> lck{ mtx_ };
@@ -420,11 +420,11 @@ auto prometheus_engine::new_gauge(path p, tags t) -> std::shared_ptr<gauge_intf>
   return result;
 }
 
-auto prometheus_engine::new_string([[maybe_unused]] path p, [[maybe_unused]] tags t) -> std::shared_ptr<string_intf> {
+auto prometheus_engine::new_string([[maybe_unused]] metric_name p, [[maybe_unused]] tags t) -> std::shared_ptr<string_intf> {
   return nullptr;
 }
 
-auto prometheus_engine::new_timing(path p, tags t, timing_intf::duration resolution, std::size_t buckets) -> std::shared_ptr<timing_intf> {
+auto prometheus_engine::new_timing(metric_name p, tags t, timing_intf::duration resolution, std::size_t buckets) -> std::shared_ptr<timing_intf> {
   auto result = std::make_shared<timing_collector>(resolution, buckets);
 
   std::lock_guard<std::shared_mutex> lck{ mtx_ };
@@ -438,7 +438,7 @@ auto prometheus_engine::new_timing(path p, tags t, timing_intf::duration resolut
   return result;
 }
 
-auto prometheus_engine::new_cumulative_timing(path p, tags t) -> std::shared_ptr<timing_intf> {
+auto prometheus_engine::new_cumulative_timing(metric_name p, tags t) -> std::shared_ptr<timing_intf> {
   auto result = std::make_shared<cumulative_timing_collector>();
 
   std::lock_guard<std::shared_mutex> lck{ mtx_ };
@@ -452,7 +452,7 @@ auto prometheus_engine::new_cumulative_timing(path p, tags t) -> std::shared_ptr
   return result;
 }
 
-auto prometheus_engine::new_counter_cb(path p, tags t, std::function<double()> cb) -> std::shared_ptr<void> {
+auto prometheus_engine::new_counter_cb(metric_name p, tags t, std::function<double()> cb) -> std::shared_ptr<void> {
   auto result = std::make_shared<functor_collector>(prom_type::counter, std::move(cb));
 
   std::lock_guard<std::shared_mutex> lck{ mtx_ };
@@ -466,7 +466,7 @@ auto prometheus_engine::new_counter_cb(path p, tags t, std::function<double()> c
   return result;
 }
 
-auto prometheus_engine::new_gauge_cb(path p, tags t, std::function<double()> cb) -> std::shared_ptr<void> {
+auto prometheus_engine::new_gauge_cb(metric_name p, tags t, std::function<double()> cb) -> std::shared_ptr<void> {
   auto result = std::make_shared<functor_collector>(prom_type::gauge, std::move(cb));
 
   std::lock_guard<std::shared_mutex> lck{ mtx_ };
@@ -480,7 +480,7 @@ auto prometheus_engine::new_gauge_cb(path p, tags t, std::function<double()> cb)
   return result;
 }
 
-auto prometheus_engine::new_string_cb([[maybe_unused]] path p, [[maybe_unused]] tags t, [[maybe_unused]] std::function<std::string()> cb) -> std::shared_ptr<void> {
+auto prometheus_engine::new_string_cb([[maybe_unused]] metric_name p, [[maybe_unused]] tags t, [[maybe_unused]] std::function<std::string()> cb) -> std::shared_ptr<void> {
   return nullptr;
 }
 
@@ -490,7 +490,7 @@ void prometheus_engine::collect(std::ostream& out) const {
   bool must_run_maintenance = false;
 
   auto map_iter = map_.begin();
-  std::vector<std::pair<const metric_name*, std::shared_ptr<collector_intf>>> collectors;
+  std::vector<std::pair<const prom_metric_name*, std::shared_ptr<collector_intf>>> collectors;
   while (map_iter != map_.end()) {
     // Figure out which metrics all share a name.
     auto range_end = std::find_if_not(

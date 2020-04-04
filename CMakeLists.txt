@@ -19,7 +19,7 @@ set(headers
     include/instrumentation/counter.h
     include/instrumentation/engine.h
     include/instrumentation/gauge.h
-    include/instrumentation/path.h
+    include/instrumentation/metric_name.h
     include/instrumentation/prometheus_engine.h
     include/instrumentation/string.h
     include/instrumentation/tags.h
@@ -34,7 +34,7 @@ add_library (instrumentation
     src/counter.cc
     src/engine.cc
     src/gauge.cc
-    src/path.cc
+    src/metric_name.cc
     src/prometheus_engine.cc
     src/string.cc
     src/timing.cc
