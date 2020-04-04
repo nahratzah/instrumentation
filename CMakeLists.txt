@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.8)
 project (instrumentation)
+enable_testing()
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
@@ -7,18 +8,12 @@ set(INSTRUMENTATION_VERSION_MAJOR 1 CACHE STRING "major version" FORCE)
 set(INSTRUMENTATION_VERSION_MINOR 1 CACHE STRING "minor version" FORCE)
 set(INSTRUMENTATION_VERSION ${INSTRUMENTATION_VERSION_MAJOR}.${INSTRUMENTATION_VERSION_MINOR} CACHE STRING "version" FORCE)
 
-enable_testing()
-
-include (CheckCXXCompilerFlag)
-check_cxx_compiler_flag ("-std=c++17" STD_CXX17)
-check_cxx_compiler_flag ("-std=c++1z" STD_CXX1Z)
-if(STD_CXX17)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-elseif(STD_CXX1Z)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
-else()
-  message(WARNING "Cannot figure out how to enable C++17 on compiler.")
-endif()
+# On windows, DLLs must be either in the search path, or in the same directory as the executable.
+# Since our test binaries are in a subdirectory, our tests fail under windows because they can't load the DLL.
+# In order to sidestep that, we use the CMAKE_RUNTIME_OUTPUT_DIRECTORY to get all executables into the same directory.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(headers
     include/instrumentation/counter.h
@@ -47,6 +42,8 @@ add_library (instrumentation
     src/timing.cc
     )
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
+target_compile_features (instrumentation PUBLIC cxx_std_17)
+set_target_properties (instrumentation PROPERTIES CXX_EXTENSIONS OFF)
 
 find_package (Threads REQUIRED)
 if(CMAKE_USE_PTHREADS_INIT)
