@@ -53,14 +53,7 @@ class prom_collector
   {}
 
   void visit_description(const metric_name& name, std::string_view description) override {
-    pending_help.clear();
-    pending_help += "# HELP ";
-    pending_help += prom_metric_name(name);
-
-    if (!description.empty()) {
-      pending_help += " ";
-      pending_help += fix_prom_descr(description);
-    }
+    pending_help.emplace(description.begin(), description.end());
   }
 
   void visit(const metric_name& name, const tags& t, const counter& c) override {
@@ -85,7 +78,6 @@ class prom_collector
     tags tag_copy = t;
     std::uint64_t cumulative_count = 0;
     for (const timing::histogram_entry& he : std::get<0>(h)) {
-      tag_copy.data().erase("le");
       std::chrono::duration<double> d = he.le;
       tag_copy.with("le", d.count());
 
@@ -94,7 +86,6 @@ class prom_collector
       write_(name, tag_copy, cumulative_count, "histogram");
     }
 
-    tag_copy.data().erase("le");
     tag_copy.with("le", "+Inf");
     write_(name, tag_copy, cumulative_count + std::get<1>(h), "histogram");
   }
@@ -102,17 +93,30 @@ class prom_collector
   private:
   template<typename T>
   void write_(const metric_name& name, const tags& t, const T& v, const char* metric_type = "untyped") {
+    const auto pm_name = prom_metric_name(name);
+
     flag_manager fm{ out };
 
-    if (!pending_help.empty()) {
-      out << "# TYPE " << prom_metric_name(name) << " " << metric_type << "\n"
-          << pending_help << "\n";
-      pending_help.clear();
+    if (pending_help) {
+      out << "# TYPE " << pm_name << " " << metric_type << "\n";
+      if (!pending_help->empty())
+        out << "# HELP " << pm_name << " " << *pending_help << "\n";
+      pending_help.reset();
     }
 
-    out << prom_metric_name(name) << "\t";
+    out << pm_name << "\t";
     write_tags_(t);
-    out << v << "\n";
+
+
+    if (std::isnan(v)) {
+      out << R"("NaN")";
+    } else if (std::isinf(v)) {
+      out << (v < 0 ? R"(-Inf)" : R"(+Inf)");
+    } else {
+      out << v;
+    }
+
+    out << "\n";
   }
 
   static auto prom_metric_name(const metric_name& name) -> std::string {
@@ -220,7 +224,7 @@ class prom_collector
   }
 
   std::ostream& out;
-  std::string pending_help;
+  std::optional<std::string> pending_help;
 };
 
 
