@@ -32,3 +32,19 @@ auto metric_name::with_separator(std::string_view sep) const -> std::string {
 
 
 } /* namespace instrumentation */
+
+namespace std {
+
+
+auto hash<instrumentation::metric_name>::operator()(const instrumentation::metric_name& name) const noexcept -> std::size_t {
+  const std::hash<std::string> inner_hash;
+
+  std::size_t result = 0;
+  for (const auto& elem : name.data())
+    result = 19u * result + inner_hash(elem);
+
+  return result;
+}
+
+
+} /* namespace std */

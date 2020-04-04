@@ -1,105 +1,17 @@
 #ifndef INSTRUMENTATION_PROMETHEUS_ENGINE_H
 #define INSTRUMENTATION_PROMETHEUS_ENGINE_H
 
-#include <instrumentation/engine.h>
-#include <instrumentation/metric_name.h>
-#include <cstddef>
-#include <functional>
-#include <memory>
-#include <optional>
-#include <shared_mutex>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <utility>
+#include <instrumentation/fwd.h>
+#include <iosfwd>
 
 namespace instrumentation {
 
 
-class prometheus_engine
-: public std::enable_shared_from_this<prometheus_engine>,
-  public engine_intf
-{
-  private:
-  class collector_intf;
-  class metric_collector;
-  class timing_collector;
-  class cumulative_timing_collector;
-  class functor_collector;
+void collect_prometheus(std::ostream& out);
+void collect_prometheus(std::ostream& out, const engine& e);
 
-  public:
-  enum class prom_type {
-    untyped,
-    counter,
-    gauge,
-    histogram,
-    summary
-  };
-
-  private:
-  struct prom_metric_name {
-    std::string name, tags;
-
-    prom_metric_name(std::string name, std::string tags) noexcept
-    : name(std::move(name)),
-      tags(std::move(tags))
-    {}
-  };
-
-  ///\brief Specialized hasher that only compares the name for equality, but not the tags.
-  ///\details We make use that the unordered_multimap requires grouping for equality-compared items.
-  struct metric_name_hasher {
-    auto operator()(const prom_metric_name& m) const noexcept -> std::size_t {
-      return sv_hash_(m.name);
-    }
-
-    private:
-    std::hash<std::string_view> sv_hash_;
-  };
-
-  ///\brief Specialized hasher that only compares the name for equality, but not the tags.
-  ///\details We make use that the unordered_multimap requires grouping for equality-compared items.
-  struct metric_name_eq {
-    auto operator()(const prom_metric_name& x, const prom_metric_name& y) const noexcept -> bool {
-      return x.name == y.name;
-    }
-  };
-
-  using help_type = std::unordered_map<std::string, std::string>;
-  using map_type = std::unordered_multimap<prom_metric_name, std::weak_ptr<collector_intf>, metric_name_hasher, metric_name_eq>;
-
-  public:
-  static auto fix_prom_name(std::string_view s) -> std::string;
-  static auto quote_string(std::string_view s) -> std::string;
-  static auto path_to_string(const metric_name& p) -> std::string;
-  static auto tags_to_string(const tags& t) -> std::string;
-
-  prometheus_engine() = default;
-
-  void add_help(const metric_name& p, std::string help);
-
-  auto new_counter(metric_name p, tags t) -> std::shared_ptr<counter_intf> override;
-  auto new_gauge(metric_name p, tags t) -> std::shared_ptr<gauge_intf> override;
-  auto new_string(metric_name p, tags t) -> std::shared_ptr<string_intf> override;
-  auto new_timing(metric_name p, tags t, timing_intf::duration resolution, std::size_t buckets) -> std::shared_ptr<timing_intf> override;
-  auto new_cumulative_timing(metric_name p, tags t) -> std::shared_ptr<timing_intf> override;
-
-  auto new_counter_cb(metric_name p, tags t, std::function<double()> cb) -> std::shared_ptr<void> override;
-  auto new_gauge_cb(metric_name p, tags t, std::function<double()> cb) -> std::shared_ptr<void> override;
-  auto new_string_cb(metric_name p, tags t, std::function<std::string()> cb) -> std::shared_ptr<void> override;
-
-  void collect(std::ostream& out) const;
-  auto collect() const -> std::string;
-  void maintenance() const;
-
-  private:
-  mutable std::shared_mutex mtx_;
-  help_type help_;
-  mutable map_type map_;
-};
-
-
-auto operator<<(std::ostream& out, prometheus_engine::prom_type t) -> std::ostream&;
+auto collect_prometheus() -> std::string;
+auto collect_prometheus(const engine& e) -> std::string;
 
 
 } /* namespace instrumentation */

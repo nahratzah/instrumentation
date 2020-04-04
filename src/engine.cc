@@ -6,11 +6,6 @@ namespace instrumentation {
 engine_intf::~engine_intf() noexcept = default;
 
 
-auto engine::new_counter(metric_name p, tags t) const -> counter {
-  if (!impl_) return {};
-  return counter(impl_->new_counter(std::move(p), std::move(t)));
-}
-
 auto engine::new_gauge(metric_name p, tags t) const -> gauge {
   if (!impl_) return {};
   return gauge(impl_->new_gauge(std::move(p), std::move(t)));
@@ -65,6 +60,13 @@ auto engine::new_string_cb(metric_name p, std::function<std::string()> cb) const
 auto engine::global() -> engine& {
   static engine impl_;
   return impl_;
+}
+
+void engine::collect(collector& c) const {
+  std::shared_lock<std::shared_mutex> lck{ mtx_ };
+
+  for (const auto& metric_pair : metrics_)
+    metric_pair.second->collect(metric_pair.first, c);
 }
 
 

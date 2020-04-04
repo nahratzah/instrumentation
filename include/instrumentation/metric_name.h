@@ -1,6 +1,8 @@
 #ifndef INSTRUMENTATION_METRIC_NAME_H
 #define INSTRUMENTATION_METRIC_NAME_H
 
+#include <cstdint>
+#include <functional>
 #include <initializer_list>
 #include <string>
 #include <string_view>
@@ -40,6 +42,9 @@ class metric_name {
   ///\brief Inspect the underlying vector of path components.
   auto data() const noexcept -> const std::vector<std::string>&;
 
+  auto operator==(const metric_name& y) const noexcept { return elements == y.elements; }
+  auto operator!=(const metric_name& y) const noexcept { return !(*this == y); }
+
   private:
   ///\brief Sequence of path elements.
   std::vector<std::string> elements;
@@ -60,5 +65,20 @@ inline auto metric_name::data() const noexcept -> const std::vector<std::string>
 
 
 } /* namespace instrumentation */
+
+namespace std {
+
+
+template<>
+struct hash<instrumentation::metric_name> {
+  // These are deprecated in c++17.
+  using argument_type = instrumentation::metric_name;
+  using result_type = std::size_t;
+
+  auto operator()(const instrumentation::metric_name& name) const noexcept -> std::size_t;
+};
+
+
+} /* namespace std */
 
 #endif /* INSTRUMENTATION_METRIC_NAME_H */
