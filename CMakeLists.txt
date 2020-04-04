@@ -23,12 +23,13 @@ set(headers
     include/instrumentation/gauge-inl.h
     include/instrumentation/string.h
     include/instrumentation/string-inl.h
+    include/instrumentation/timing.h
+    include/instrumentation/timing-inl.h
     include/instrumentation/engine.h
     include/instrumentation/metric_name.h
     include/instrumentation/prometheus_engine.h
     include/instrumentation/tags.h
     include/instrumentation/time_track.h
-    include/instrumentation/timing.h
     include/instrumentation/collector.h
     )
 set(headers_detail

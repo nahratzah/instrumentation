@@ -8,51 +8,15 @@
 #include <unordered_map>
 #include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
-#include <instrumentation/timing.h>
 #include <instrumentation/collector.h>
 #include <instrumentation/detail/metric_group.h>
 
 namespace instrumentation {
 
 
-class engine_intf {
-  public:
-  virtual ~engine_intf() noexcept;
-
-  virtual auto new_timing(metric_name p, tags t, timing_intf::duration resolution, std::size_t buckets) -> std::shared_ptr<timing_intf> = 0;
-  virtual auto new_cumulative_timing(metric_name p, tags t) -> std::shared_ptr<timing_intf> = 0;
-
-  virtual auto new_counter_cb(metric_name p, tags t, std::function<double()> cb) -> std::shared_ptr<void> = 0;
-  virtual auto new_gauge_cb(metric_name p, tags t, std::function<double()> cb) -> std::shared_ptr<void> = 0;
-  virtual auto new_string_cb(metric_name p, tags t, std::function<std::string()> cb) -> std::shared_ptr<void> = 0;
-};
-
-
 class engine {
   public:
   engine() = default;
-
-  engine(std::shared_ptr<engine_intf> impl) noexcept;
-
-  [[deprecated]]
-  auto new_timing(metric_name p, tags t, timing::duration resolution = timing::dfl_resolution, std::size_t buckets = timing::dfl_buckets) const -> timing;
-  [[deprecated]]
-  auto new_timing(metric_name p, timing::duration resolution = timing::dfl_resolution, std::size_t buckets = timing::dfl_buckets) const -> timing;
-  [[deprecated]]
-  auto new_cumulative_timing(metric_name p, tags t) const -> timing;
-
-  [[deprecated]]
-  auto new_counter_cb(metric_name p, tags t, std::function<double()> cb) const -> std::shared_ptr<void>;
-  [[deprecated]]
-  auto new_counter_cb(metric_name p, std::function<double()> cb) const -> std::shared_ptr<void>;
-  [[deprecated]]
-  auto new_gauge_cb(metric_name p, tags t, std::function<double()> cb) const -> std::shared_ptr<void>;
-  [[deprecated]]
-  auto new_gauge_cb(metric_name p, std::function<double()> cb) const -> std::shared_ptr<void>;
-  [[deprecated]]
-  auto new_string_cb(metric_name p, tags t, std::function<std::string()> cb) const -> std::shared_ptr<void>;
-  [[deprecated]]
-  auto new_string_cb(metric_name p, std::function<std::string()> cb) const -> std::shared_ptr<void>;
 
   static auto global() -> engine&;
 
@@ -66,15 +30,9 @@ class engine {
   template<typename MetricCb>
   auto get_or_create_(metric_name&& name, MetricCb&& cb) -> std::shared_ptr<detail::metric_group_intf>;
 
-  std::shared_ptr<engine_intf> impl_ [[deprecated]];
   std::unordered_map<metric_name, std::shared_ptr<detail::metric_group_intf>> metrics_;
   mutable std::shared_mutex mtx_;
 };
-
-
-inline engine::engine(std::shared_ptr<engine_intf> impl) noexcept
-: impl_(impl)
-{}
 
 
 template<typename MetricCb>

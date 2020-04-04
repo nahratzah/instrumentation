@@ -41,6 +41,8 @@ class metric_name {
   auto empty() const noexcept -> bool;
   ///\brief Inspect the underlying vector of path components.
   auto data() const noexcept -> const std::vector<std::string>&;
+  ///\brief Allow modification of underlying path components.
+  auto data() noexcept -> std::vector<std::string>&;
 
   auto operator==(const metric_name& y) const noexcept { return elements == y.elements; }
   auto operator!=(const metric_name& y) const noexcept { return !(*this == y); }

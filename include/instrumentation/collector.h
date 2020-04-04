@@ -17,6 +17,7 @@ class collector {
   virtual void visit(const metric_name& name, const tags& tags, const counter& v) = 0;
   virtual void visit(const metric_name& name, const tags& tags, const gauge& v) = 0;
   virtual void visit(const metric_name& name, const tags& tags, const string& v) = 0;
+  virtual void visit(const metric_name& name, const tags& tags, const timing& v) = 0;
 };
 
 

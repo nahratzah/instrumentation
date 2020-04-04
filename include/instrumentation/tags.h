@@ -25,6 +25,7 @@ class tags {
   auto with(std::string_view name, T&& value) && -> tags&&;
 
   auto data() const noexcept -> const std::unordered_map<std::string, tag_value>&;
+  auto data() noexcept -> std::unordered_map<std::string, tag_value>&;
   auto empty() const noexcept -> bool;
 
   private:
@@ -39,25 +40,33 @@ inline tags::tags(std::initializer_list<std::pair<const std::string, tag_value>>
 template<typename T>
 inline auto tags::with(std::string_view name, T&& value) & -> tags& {
   if constexpr(std::is_same_v<bool, std::decay_t<T>>) {
-    tags_.emplace(
+    auto emplace_result = tags_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(name.begin(), name.end()),
         std::forward_as_tuple(std::in_place_type<bool>, value));
+    if (!std::get<1>(emplace_result))
+      std::get<0>(emplace_result)->second.template emplace<bool>(value);
   } else if constexpr(std::is_integral_v<T>) {
-    tags_.emplace(
+    auto emplace_result = tags_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(name.begin(), name.end()),
         std::forward_as_tuple(std::in_place_type<std::int64_t>, value));
+    if (!std::get<1>(emplace_result))
+      std::get<0>(emplace_result)->second.template emplace<std::int64_t>(value);
   } else if constexpr(std::is_floating_point_v<T>) {
-    tags_.emplace(
+    auto emplace_result = tags_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(name.begin(), name.end()),
-        std::forward_as_tuple(std::in_place_type<std::int64_t>, value));
+        std::forward_as_tuple(std::in_place_type<double>, value));
+    if (!std::get<1>(emplace_result))
+      std::get<0>(emplace_result)->second.template emplace<double>(value);
   } else {
-    tags_.emplace(
+    auto emplace_result = tags_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(name.begin(), name.end()),
         std::forward_as_tuple(std::in_place_type<std::string>, value));
+    if (!std::get<1>(emplace_result))
+      std::get<0>(emplace_result)->second.template emplace<std::string>(value);
   }
   return *this;
 }

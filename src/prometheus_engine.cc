@@ -3,6 +3,7 @@
 #include <instrumentation/counter.h>
 #include <instrumentation/gauge.h>
 #include <instrumentation/string.h>
+#include <instrumentation/timing.h>
 #include <instrumentation/engine.h>
 #include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
@@ -76,6 +77,26 @@ class prom_collector
       tag_copy.with("strval", *s);
       write_(name, t, 1.0, "untyped");
     }
+  }
+
+  void visit(const metric_name& name, const tags& t, const timing& m) override {
+    const auto h = m.get_histogram();
+
+    tags tag_copy = t;
+    std::uint64_t cumulative_count = 0;
+    for (const timing::histogram_entry& he : std::get<0>(h)) {
+      tag_copy.data().erase("le");
+      std::chrono::duration<double> d = he.le;
+      tag_copy.with("le", d.count());
+
+      cumulative_count += he.bucket_count;
+
+      write_(name, tag_copy, cumulative_count, "histogram");
+    }
+
+    tag_copy.data().erase("le");
+    tag_copy.with("le", "+Inf");
+    write_(name, tag_copy, cumulative_count + std::get<1>(h), "histogram");
   }
 
   private:
