@@ -75,6 +75,8 @@ class prom_collector
 
   void visit(const metric_name& name, const tags& t, const timing& m) override {
     const auto h = m.get_histogram();
+    metric_name decorated_name = name;
+    decorated_name.data().push_back("seconds");
 
     tags tag_copy = t;
     std::uint64_t cumulative_count = 0;
@@ -84,7 +86,7 @@ class prom_collector
 
       cumulative_count += he.bucket_count;
 
-      write_(name, tag_copy, cumulative_count, "histogram");
+      write_(decorated_name, tag_copy, cumulative_count, "histogram");
     }
 
     tag_copy.with("le", "+Inf");

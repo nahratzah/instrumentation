@@ -54,6 +54,10 @@ class metric_group
   auto get_existing_(const label_set& labels) const -> std::shared_ptr<metric_type>;
   virtual auto get_or_create_(const label_set& labels) -> std::shared_ptr<metric_type> = 0;
 
+  auto make_tags_(const label_set& labels, std::index_sequence<> indices [[maybe_unused]]) const -> tags;
+  template<std::size_t Idx0, std::size_t... Idx>
+  auto make_tags_(const label_set& labels, std::index_sequence<Idx0, Idx...> indices [[maybe_unused]]) -> tags;
+
   protected:
   metrics_map metrics_;
   std::array<std::string, NUM_LABELS> label_names_;
@@ -109,7 +113,7 @@ void metric_group<MetricType, LabelTypes...>::collect(const metric_name& name, c
   c.visit_description(name, description_);
 
   for (const auto& tagged_metric : metrics_) {
-    const auto& tags = tagged_metric.first;
+    const auto& tags = make_tags_(tagged_metric.first, std::index_sequence_for<LabelTypes...>());
     const auto& metric = tagged_metric.second;
 
     metric.collect(name, tags, c);
@@ -130,6 +134,18 @@ auto metric_group<MetricType, LabelTypes...>::get_existing_(const label_set& lab
   auto iter = metrics_.find(labels);
   if (iter == metrics_.end()) return nullptr;
   return iter->second;
+}
+
+template<typename MetricType, typename... LabelTypes>
+auto metric_group<MetricType, LabelTypes...>::make_tags_(const label_set& labels [[maybe_unused]], std::index_sequence<> indices [[maybe_unused]]) const -> tags {
+  return tags();
+}
+
+template<typename MetricType, typename... LabelTypes>
+template<std::size_t Idx0, std::size_t... Idx>
+auto metric_group<MetricType, LabelTypes...>::make_tags_(const label_set& labels, std::index_sequence<Idx0, Idx...> indices [[maybe_unused]]) -> tags {
+  return make_tags_(labels, std::index_sequence<Idx...>())
+      .with(std::get<Idx0>(label_names_), std::get<Idx0>(labels));
 }
 
 
