@@ -1,6 +1,7 @@
 #include <instrumentation/prometheus_engine.h>
 #include <instrumentation/collector.h>
 #include <instrumentation/counter.h>
+#include <instrumentation/gauge.h>
 #include <instrumentation/engine.h>
 #include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
@@ -62,6 +63,10 @@ class prom_collector
 
   void visit(const metric_name& name, const tags& t, const counter& c) override {
     write_(name, t, *c, "counter");
+  }
+
+  void visit(const metric_name& name, const tags& t, const gauge& g) override {
+    write_(name, t, *g, "gauge");
   }
 
   private:

@@ -19,8 +19,9 @@ set(headers
     include/instrumentation/fwd.h
     include/instrumentation/counter.h
     include/instrumentation/counter-inl.h
-    include/instrumentation/engine.h
     include/instrumentation/gauge.h
+    include/instrumentation/gauge-inl.h
+    include/instrumentation/engine.h
     include/instrumentation/metric_name.h
     include/instrumentation/prometheus_engine.h
     include/instrumentation/string.h
@@ -36,7 +37,6 @@ set(headers_detail
 include_directories (include)
 add_library (instrumentation
     src/engine.cc
-    src/gauge.cc
     src/metric_name.cc
     src/prometheus_engine.cc
     src/string.cc

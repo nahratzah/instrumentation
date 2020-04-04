@@ -8,7 +8,6 @@
 #include <unordered_map>
 #include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
-#include <instrumentation/gauge.h>
 #include <instrumentation/string.h>
 #include <instrumentation/timing.h>
 #include <instrumentation/collector.h>
@@ -21,7 +20,6 @@ class engine_intf {
   public:
   virtual ~engine_intf() noexcept;
 
-  virtual auto new_gauge(metric_name p, tags t) -> std::shared_ptr<gauge_intf> = 0;
   virtual auto new_string(metric_name p, tags t) -> std::shared_ptr<string_intf> = 0;
   virtual auto new_timing(metric_name p, tags t, timing_intf::duration resolution, std::size_t buckets) -> std::shared_ptr<timing_intf> = 0;
   virtual auto new_cumulative_timing(metric_name p, tags t) -> std::shared_ptr<timing_intf> = 0;
@@ -38,8 +36,6 @@ class engine {
 
   engine(std::shared_ptr<engine_intf> impl) noexcept;
 
-  [[deprecated]]
-  auto new_gauge(metric_name p, tags t = tags()) const -> gauge;
   [[deprecated]]
   auto new_string(metric_name p, tags t = tags()) const -> string;
   [[deprecated]]

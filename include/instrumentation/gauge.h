@@ -1,43 +1,42 @@
 #ifndef INSTRUMENTATION_GAUGE_H
 #define INSTRUMENTATION_GAUGE_H
 
-#include <initializer_list>
-#include <memory>
+#include <instrumentation/fwd.h>
+#include <instrumentation/detail/metric_group.h>
+#include <array>
+#include <atomic>
 #include <string>
-#include <string_view>
-#include <instrumentation/tags.h>
+#include <memory>
+
+namespace instrumentation::detail {
+
+
+class gauge_impl
+: public std::enable_shared_from_this<gauge_impl>
+{
+  public:
+  void inc(double d = 1.0) noexcept;
+  void dec(double d = 1.0) noexcept;
+  void set(double d) noexcept;
+  auto get() const noexcept -> double;
+  void collect(const metric_name& name, const tags& tags, collector& c);
+
+  private:
+  std::atomic<double> v_{ 0.0 };
+};
+
+
+} /* namespace instrumentation::detail */
 
 namespace instrumentation {
 
 
-class gauge_intf {
-  protected:
-  virtual ~gauge_intf() noexcept;
-
-  public:
-  void inc() noexcept;
-  void inc(double d) noexcept;
-  void dec() noexcept;
-  void dec(double d) noexcept;
-  void set(double d) noexcept;
-
-  private:
-  virtual void do_inc(double d) noexcept = 0;
-  virtual void do_set(double d) noexcept = 0;
-};
-
-
 class gauge {
+  friend detail::gauge_impl;
+  template<typename... LabelTypes> friend class gauge_vector;
+
   public:
   gauge() = default;
-
-  explicit gauge(std::string_view name);
-  gauge(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags);
-  gauge(std::string_view name, instrumentation::tags tags);
-
-  gauge(std::shared_ptr<gauge_intf> impl) noexcept
-  : impl_(std::move(impl))
-  {}
 
   void operator++() const noexcept;
   void operator++(int) const noexcept;
@@ -47,11 +46,34 @@ class gauge {
   void operator-=(double d) const noexcept;
   void operator=(double d) const noexcept;
 
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
+  auto operator*() const -> double;
+
   private:
-  std::shared_ptr<gauge_intf> impl_;
+  std::shared_ptr<detail::gauge_impl> impl_;
+};
+
+
+template<typename... LabelTypes>
+class gauge_vector {
+  private:
+  using group_type = detail::metric_group<detail::gauge_impl, LabelTypes...>;
+
+  public:
+  gauge_vector() noexcept = default;
+  gauge_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  gauge_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+
+  auto labels(const LabelTypes&... values) const -> gauge;
+
+  private:
+  std::shared_ptr<group_type> impl_;
 };
 
 
 } /* namespace instrumentation */
+
+#include "gauge-inl.h"
 
 #endif /* INSTRUMENTATION_GAUGE_H */

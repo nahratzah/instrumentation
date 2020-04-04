@@ -6,11 +6,6 @@ namespace instrumentation {
 engine_intf::~engine_intf() noexcept = default;
 
 
-auto engine::new_gauge(metric_name p, tags t) const -> gauge {
-  if (!impl_) return {};
-  return gauge(impl_->new_gauge(std::move(p), std::move(t)));
-}
-
 auto engine::new_string(metric_name p, tags t) const -> string {
   if (!impl_) return {};
   return string(impl_->new_string(std::move(p), std::move(t)));

@@ -9,6 +9,8 @@ class collector;
 
 class counter;
 template<typename... LabelTypes> class counter_vector;
+class gauge;
+template<typename... LabelTypes> class gauge_vector;
 
 
 } /* namespace instrumentation */
@@ -17,6 +19,7 @@ namespace instrumentation::detail {
 
 
 class counter_impl;
+class gauge_impl;
 
 
 } /* namespace instrumentation::detail */
