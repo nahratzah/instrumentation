@@ -12,6 +12,7 @@
 #include <ios>
 #include <iterator>
 #include <map>
+#include <optional>
 #include <ostream>
 #include <regex>
 #include <sstream>
