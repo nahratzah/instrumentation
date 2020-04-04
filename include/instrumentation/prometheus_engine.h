@@ -3,6 +3,7 @@
 
 #include <instrumentation/fwd.h>
 #include <iosfwd>
+#include <string>
 
 namespace instrumentation {
 
