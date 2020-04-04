@@ -109,10 +109,15 @@ class prom_collector
     write_tags_(t);
 
 
-    if (std::isnan(v)) {
-      out << R"("NaN")";
-    } else if (std::isinf(v)) {
-      out << (v < 0 ? R"(-Inf)" : R"(+Inf)");
+    if constexpr(std::is_floating_point_v<T>) {
+      // For floating point, ensure we handle the edge cases correctly.
+      if (std::isnan(v)) {
+        out << R"("NaN")";
+      } else if (std::isinf(v)) {
+        out << (v < 0 ? R"(-Inf)" : R"(+Inf)");
+      } else {
+        out << v;
+      }
     } else {
       out << v;
     }
