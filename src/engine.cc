@@ -6,11 +6,6 @@ namespace instrumentation {
 engine_intf::~engine_intf() noexcept = default;
 
 
-auto engine::new_string(metric_name p, tags t) const -> string {
-  if (!impl_) return {};
-  return string(impl_->new_string(std::move(p), std::move(t)));
-}
-
 auto engine::new_timing(metric_name p, tags t, timing::duration resolution, std::size_t buckets) const -> timing {
   if (!impl_) return {};
   return timing(impl_->new_timing(std::move(p), std::move(t), resolution, buckets));

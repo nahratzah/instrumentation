@@ -2,6 +2,7 @@
 #include <instrumentation/collector.h>
 #include <instrumentation/counter.h>
 #include <instrumentation/gauge.h>
+#include <instrumentation/string.h>
 #include <instrumentation/engine.h>
 #include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
@@ -67,6 +68,14 @@ class prom_collector
 
   void visit(const metric_name& name, const tags& t, const gauge& g) override {
     write_(name, t, *g, "gauge");
+  }
+
+  void visit(const metric_name& name, const tags& t, const string& s) override {
+    if (t.data().count("strval") == 0) {
+      tags tag_copy = t;
+      tag_copy.with("strval", *s);
+      write_(name, t, 1.0, "untyped");
+    }
   }
 
   private:
