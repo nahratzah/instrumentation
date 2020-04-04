@@ -117,3 +117,11 @@ auto timing_impl::default_buckets() -> std::vector<duration> {
 
 
 } /* namespace instrumentation::detail */
+
+namespace instrumentation {
+
+
+template class timing_vector<>;
+
+
+} /* namespace instrumentation */

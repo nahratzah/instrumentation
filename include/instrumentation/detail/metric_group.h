@@ -4,19 +4,54 @@
 #include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
 #include <instrumentation/collector.h>
+#include <array>
 #include <cstddef>
 #include <memory>
-#include <array>
-#include <string>
 #include <mutex>
 #include <shared_mutex>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
 
 namespace instrumentation::detail {
 
 
+template<typename LabelSet> struct label_set_hash;
+
+template<typename... LabelTypes>
+struct label_set_hash<std::tuple<LabelTypes...>> {
+  auto operator()(const std::tuple<LabelTypes...>& labels) const noexcept -> std::size_t {
+    return hash_(0u, labels, std::index_sequence_for<LabelTypes...>());
+  }
+
+  private:
+  template<typename T>
+  static auto hash_1_(const T& v) noexcept -> std::size_t {
+    std::hash<T> h;
+    return h(v);
+  }
+
+  template<std::size_t Idx>
+  static auto hash_n_(const std::tuple<LabelTypes...>& labels) noexcept -> std::size_t {
+    return hash_1_(std::get<Idx>(labels));
+  }
+
+  static auto hash_(std::size_t outcome, const std::tuple<LabelTypes...>& labels [[maybe_unused]] , std::index_sequence<> indices [[maybe_unused]]) noexcept -> std::size_t {
+    return outcome;
+  }
+
+  template<std::size_t Idx0, std::size_t... Idxs>
+  static auto hash_(std::size_t outcome, const std::tuple<LabelTypes...>& labels, std::index_sequence<Idx0, Idxs...> indices [[maybe_unused]]) noexcept -> std::size_t {
+    outcome = 23u * outcome + hash_n_<Idx0>(labels);
+    return hash_(outcome, labels, std::index_sequence<Idxs...>());
+  }
+};
+
+
 class metric_group_intf {
   public:
+  metric_group_intf() = default;
+
   metric_group_intf(const metric_group_intf&) = delete;
   metric_group_intf(metric_group_intf&&) = delete;
   metric_group_intf& operator=(const metric_group_intf&) = delete;
@@ -38,7 +73,7 @@ class metric_group
   static inline constexpr std::size_t NUM_LABELS = sizeof...(LabelTypes);
 
   protected:
-  using metrics_map = std::unordered_map<label_set, std::shared_ptr<MetricType>>;
+  using metrics_map = std::unordered_map<label_set, std::shared_ptr<MetricType>, label_set_hash<label_set>>;
 
   public:
   template<typename... MetricArgs>
@@ -48,7 +83,7 @@ class metric_group
   ~metric_group() noexcept override = default;
 
   void collect(const metric_name& name, collector& c) const override final;
-  auto get(const label_set& labels) -> std::shared_ptr<metric_type> override final;
+  auto get(const label_set& labels) -> std::shared_ptr<metric_type>;
 
   private:
   auto get_existing_(const label_set& labels) const -> std::shared_ptr<metric_type>;
@@ -116,7 +151,7 @@ void metric_group<MetricType, LabelTypes...>::collect(const metric_name& name, c
     const auto& tags = make_tags_(tagged_metric.first, std::index_sequence_for<LabelTypes...>());
     const auto& metric = tagged_metric.second;
 
-    metric.collect(name, tags, c);
+    metric->collect(name, tags, c);
   }
 }
 

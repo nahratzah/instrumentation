@@ -71,4 +71,16 @@ auto timing_vector<LabelTypes...>::labels(const LabelTypes&... values) const -> 
 
 } /* namespace instrumentation */
 
+namespace instrumentation::detail {
+
+
+inline void timing_impl::collect(const metric_name& name, const tags& tags, collector& c) {
+  timing tmp;
+  tmp.impl_ = shared_from_this();
+  return c.visit(name, tags, tmp);
+}
+
+
+} /* namespace instrumentation::detail */
+
 #endif /* INSTRUMENTATION_TIMING_INL_H */

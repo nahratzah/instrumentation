@@ -72,6 +72,9 @@ class gauge_vector {
 };
 
 
+extern template class gauge_vector<>;
+
+
 } /* namespace instrumentation */
 
 #include "gauge-inl.h"

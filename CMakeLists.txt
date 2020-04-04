@@ -39,10 +39,13 @@ set(headers_detail
 include_directories (include)
 add_library (instrumentation
     src/engine.cc
+    src/collector.cc
     src/metric_name.cc
     src/prometheus_engine.cc
+    src/counter.cc
+    src/gauge.cc
+    src/string.cc
     src/timing.cc
-    src/collector.cc
     )
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
 target_compile_features (instrumentation PUBLIC cxx_std_17)

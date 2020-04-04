@@ -67,6 +67,9 @@ class string_vector {
 };
 
 
+extern template class string_vector<>;
+
+
 } /* namespace instrumentation */
 
 #include "string-inl.h"

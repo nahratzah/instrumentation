@@ -53,7 +53,7 @@ inline auto engine::get_existing_(const metric_name& name) const -> std::shared_
 template<typename MetricCb>
 inline auto engine::get_or_create_(metric_name&& name, MetricCb&& cb) -> std::shared_ptr<detail::metric_group_intf> {
   std::lock_guard<std::shared_mutex> lck{ mtx_ };
-  return std::get<0>(metrics_.emplace(std::move(name), std::invoke(std::forward<MetricCb>(cb))));
+  return std::get<0>(metrics_.emplace(std::move(name), std::invoke(std::forward<MetricCb>(cb))))->second;
 }
 
 

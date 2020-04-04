@@ -44,6 +44,7 @@ class timing_impl
 
   void inc(duration d, std::uint64_t v = 1) noexcept;
   auto get_histogram() const -> std::tuple<std::vector<histogram_entry>, std::uint64_t>;
+  void collect(const metric_name& name, const tags& tags, collector& c);
 
   private:
   bucket_vector v_;
@@ -97,6 +98,9 @@ class timing_vector {
   private:
   std::shared_ptr<group_type> impl_;
 };
+
+
+extern template class timing_vector<>;
 
 
 } /* namespace instrumentation */
