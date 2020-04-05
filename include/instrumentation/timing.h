@@ -7,6 +7,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -55,6 +56,12 @@ class timing_impl
   std::atomic<std::uint64_t> large_v_{ 0u };
 };
 
+auto operator==(const timing_impl::histogram_entry& x, const timing_impl::histogram_entry& y) noexcept -> bool;
+auto operator!=(const timing_impl::histogram_entry& x, const timing_impl::histogram_entry& y) noexcept -> bool;
+
+template<typename Char, typename Traits>
+auto operator<<(std::basic_ostream<Char, Traits>& out, const timing_impl::histogram_entry& entry) -> std::basic_ostream<Char, Traits>&;
+
 
 } /* namespace instrumentation::detail */
 
@@ -71,8 +78,10 @@ class timing {
   using histogram_entry = detail::timing_impl::histogram_entry;
 
   public:
-  void operator<<(duration d) const noexcept;
+  auto operator<<(duration d) const noexcept -> const timing&;
 
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
   auto operator*() const -> std::tuple<std::vector<histogram_entry>, std::uint64_t>;
 
   private:
@@ -94,10 +103,18 @@ class timing_vector {
   timing_vector() noexcept = default;
   timing_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
   timing_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
-  timing_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::vector<duration> buckets, std::string description = "");
-  timing_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::vector<duration> buckets, std::string description = "");
+  timing_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::vector<duration> buckets, std::string description);
+  timing_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::vector<duration> buckets, std::string description);
+
+  timing_vector(std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  timing_vector(engine& e, std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  timing_vector(std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::vector<duration> buckets, std::string description);
+  timing_vector(engine& e, std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::vector<duration> buckets, std::string description);
 
   auto labels(const LabelTypes&... values) const -> timing;
+
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
 
   private:
   std::shared_ptr<group_type> impl_;
