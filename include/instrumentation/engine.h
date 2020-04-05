@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <instrumentation/detail/export_.h>
 #include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
 #include <instrumentation/collector.h>
@@ -18,8 +19,10 @@ class engine {
   public:
   engine() = default;
 
+  instrumentation_export_
   static auto global() -> engine&;
 
+  instrumentation_export_
   void collect(collector& c) const;
 
   template<typename MetricCb>

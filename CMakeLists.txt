@@ -42,9 +42,6 @@ add_library (instrumentation
     src/collector.cc
     src/metric_name.cc
     src/prometheus_engine.cc
-    src/counter.cc
-    src/gauge.cc
-    src/string.cc
     src/timing.cc
     )
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})

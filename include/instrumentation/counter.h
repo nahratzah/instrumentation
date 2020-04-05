@@ -71,9 +71,6 @@ class counter_vector {
 };
 
 
-extern template class counter_vector<>;
-
-
 } /* namespace instrumentation */
 
 #include "counter-inl.h"
