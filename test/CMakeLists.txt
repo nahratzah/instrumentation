@@ -15,4 +15,5 @@ if (UnitTest++_FOUND)
   include_directories(${UTPP_INCLUDE_DIRS})
 
   do_test (counter)
+  do_test (gauge)
 endif ()

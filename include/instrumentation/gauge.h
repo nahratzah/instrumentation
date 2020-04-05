@@ -64,8 +64,13 @@ class gauge_vector {
   gauge_vector() noexcept = default;
   gauge_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
   gauge_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  gauge_vector(std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  gauge_vector(engine& e, std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
 
   auto labels(const LabelTypes&... values) const -> gauge;
+
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
 
   private:
   std::shared_ptr<group_type> impl_;

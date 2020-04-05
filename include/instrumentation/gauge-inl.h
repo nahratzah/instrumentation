@@ -73,12 +73,39 @@ gauge_vector<LabelTypes...>::gauge_vector(
 }
 
 template<typename... LabelTypes>
+gauge_vector<LabelTypes...>::gauge_vector(
+    std::string_view name,
+    std::array<std::string, sizeof...(LabelTypes)> labels,
+    std::string description)
+: gauge_vector(metric_name(name), std::move(labels), std::move(description))
+{}
+
+template<typename... LabelTypes>
+gauge_vector<LabelTypes...>::gauge_vector(
+    engine& e,
+    std::string_view name,
+    std::array<std::string, sizeof...(LabelTypes)> labels,
+    std::string description)
+: gauge_vector(e, metric_name(name), std::move(labels), std::move(description))
+{}
+
+template<typename... LabelTypes>
 auto gauge_vector<LabelTypes...>::labels(const LabelTypes&... values) const -> gauge {
   gauge result;
   if (impl_ == nullptr) return result;
 
   result.impl_ = impl_->get(std::make_tuple(values...));
   return result;
+}
+
+template<typename... LabelTypes>
+gauge_vector<LabelTypes...>::operator bool() const noexcept {
+  return impl_ != nullptr;
+}
+
+template<typename... LabelTypes>
+auto gauge_vector<LabelTypes...>::operator!() const noexcept -> bool {
+  return impl_ == nullptr;
 }
 
 
