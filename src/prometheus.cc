@@ -30,13 +30,14 @@ class flag_manager {
   flag_manager() = default;
 
   flag_manager(std::ios_base& out)
-  : stream_(&out)
+  : stream_(&out),
+    saved_(stream_->flags())
   {
-    saved_ = stream_->setf(std::ios_base::fixed, std::ios_base::floatfield);
+    stream_->setf(0, std::ios_base::floatfield);
   }
 
   ~flag_manager() noexcept {
-    if (stream_ != nullptr) stream_->setf(saved_, std::ios_base::floatfield);
+    if (stream_ != nullptr) stream_->flags(saved_);
   }
 
   private:
@@ -54,7 +55,7 @@ class prom_collector
   {}
 
   void visit_description(const metric_name& name, std::string_view description) override {
-    pending_help.emplace(description.begin(), description.end());
+    pending_help.emplace(fix_prom_descr(description));
   }
 
   void visit(const metric_name& name, const tags& t, const counter& c) override {
@@ -69,7 +70,7 @@ class prom_collector
     if (t.data().count("strval") == 0) {
       tags tag_copy = t;
       tag_copy.with("strval", *s);
-      write_(name, t, 1.0, "untyped");
+      write_(name, tag_copy, 1.0, "untyped");
     }
   }
 
@@ -90,7 +91,7 @@ class prom_collector
     }
 
     tag_copy.with("le", "+Inf");
-    write_(name, tag_copy, cumulative_count + std::get<1>(h), "histogram");
+    write_(decorated_name, tag_copy, cumulative_count + std::get<1>(h), "histogram");
   }
 
   private:
@@ -101,15 +102,14 @@ class prom_collector
     flag_manager fm{ out };
 
     if (pending_help) {
-      out << "# TYPE " << pm_name << " " << metric_type << "\n";
       if (!pending_help->empty())
         out << "# HELP " << pm_name << " " << *pending_help << "\n";
       pending_help.reset();
+      out << "# TYPE " << pm_name << " " << metric_type << "\n";
     }
 
     out << pm_name << "\t";
     write_tags_(t);
-
 
     if constexpr(std::is_floating_point_v<T>) {
       // For floating point, ensure we handle the edge cases correctly.
@@ -152,7 +152,7 @@ class prom_collector
                 return v < 0 ? R"(-Inf)" : R"(+Inf)";
               } else {
                 std::ostringstream oss;
-                oss.setf(std::ios_base::fixed, std::ios_base::floatfield);
+                oss.setf(0, std::ios_base::floatfield);
                 oss << v;
                 return quote_string(oss.str());
               }
@@ -216,17 +216,28 @@ class prom_collector
   }
 
   static auto quote_string(std::string_view s) -> std::string {
-    static const auto escape_str_chars = std::regex(R"--(["\\\n])--");
-
     std::string out;
     out.reserve(s.size() + 2u);
 
     out.append(1, '"');
-    std::regex_replace(
-        std::back_inserter(out),
-        s.begin(), s.end(),
-        escape_str_chars,
-        R"--(\\$1)--");
+
+    for (char c : s) {
+      switch (c) {
+      default:
+        out.push_back(c);
+        break;
+      case '\n':
+        out.append(R"(\n)");
+        break;
+      case '\\':
+        out.append(R"(\\)");
+        break;
+      case '"':
+        out.append(R"(\")");
+        break;
+      }
+    }
+
     out.append(1, '"');
     return out;
   }
