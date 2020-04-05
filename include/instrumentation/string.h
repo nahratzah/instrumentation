@@ -59,8 +59,13 @@ class string_vector {
   string_vector() noexcept = default;
   string_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
   string_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  string_vector(std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  string_vector(engine& e, std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
 
   auto labels(const LabelTypes&... values) const -> string;
+
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
 
   private:
   std::shared_ptr<group_type> impl_;

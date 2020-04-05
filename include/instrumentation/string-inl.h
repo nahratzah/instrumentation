@@ -49,12 +49,39 @@ string_vector<LabelTypes...>::string_vector(
 }
 
 template<typename... LabelTypes>
+string_vector<LabelTypes...>::string_vector(
+    std::string_view name,
+    std::array<std::string, sizeof...(LabelTypes)> labels,
+    std::string description)
+: string_vector(metric_name(name), std::move(labels), std::move(description))
+{}
+
+template<typename... LabelTypes>
+string_vector<LabelTypes...>::string_vector(
+    engine& e,
+    std::string_view name,
+    std::array<std::string, sizeof...(LabelTypes)> labels,
+    std::string description)
+: string_vector(e, metric_name(name), std::move(labels), std::move(description))
+{}
+
+template<typename... LabelTypes>
 auto string_vector<LabelTypes...>::labels(const LabelTypes&... values) const -> string {
   string result;
   if (impl_ == nullptr) return result;
 
   result.impl_ = impl_->get(std::make_tuple(values...));
   return result;
+}
+
+template<typename... LabelTypes>
+string_vector<LabelTypes...>::operator bool() const noexcept {
+  return impl_ != nullptr;
+}
+
+template<typename... LabelTypes>
+auto string_vector<LabelTypes...>::operator!() const noexcept -> bool {
+  return impl_ == nullptr;
 }
 
 

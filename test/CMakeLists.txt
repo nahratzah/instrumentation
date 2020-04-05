@@ -16,4 +16,5 @@ if (UnitTest++_FOUND)
 
   do_test (counter)
   do_test (gauge)
+  do_test (string)
 endif ()
