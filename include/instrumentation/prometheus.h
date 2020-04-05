@@ -1,5 +1,5 @@
-#ifndef INSTRUMENTATION_PROMETHEUS_ENGINE_H
-#define INSTRUMENTATION_PROMETHEUS_ENGINE_H
+#ifndef INSTRUMENTATION_PROMETHEUS_H
+#define INSTRUMENTATION_PROMETHEUS_H
 
 #include <instrumentation/detail/export_.h>
 #include <instrumentation/fwd.h>
@@ -22,4 +22,4 @@ auto collect_prometheus(const engine& e) -> std::string;
 
 } /* namespace instrumentation */
 
-#endif /* INSTRUMENTATION_PROMETHEUS_ENGINE_H */
+#endif /* INSTRUMENTATION_PROMETHEUS_H */

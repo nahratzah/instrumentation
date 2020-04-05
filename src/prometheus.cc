@@ -1,4 +1,4 @@
-#include <instrumentation/prometheus_engine.h>
+#include <instrumentation/prometheus.h>
 #include <instrumentation/collector.h>
 #include <instrumentation/counter.h>
 #include <instrumentation/gauge.h>
