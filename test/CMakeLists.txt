@@ -2,7 +2,7 @@ include(CTest)
 find_package(UnitTest++)
 
 macro (do_test binary)
-  add_executable (test_${binary} ${binary}.cc)
+  add_executable (test_${binary} ${binary}.cc test_collector.cc)
   target_link_libraries (test_${binary} instrumentation)
   target_link_libraries (test_${binary} UnitTest++)
   target_compile_features (test_${binary} PUBLIC cxx_std_17)
