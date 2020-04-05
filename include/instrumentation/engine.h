@@ -5,62 +5,59 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <instrumentation/path.h>
+#include <unordered_map>
+#include <instrumentation/detail/export_.h>
+#include <instrumentation/metric_name.h>
 #include <instrumentation/tags.h>
-#include <instrumentation/counter.h>
-#include <instrumentation/gauge.h>
-#include <instrumentation/string.h>
-#include <instrumentation/timing.h>
+#include <instrumentation/collector.h>
+#include <instrumentation/detail/metric_group.h>
 
 namespace instrumentation {
-
-
-class engine_intf {
-  public:
-  virtual ~engine_intf() noexcept;
-
-  virtual auto new_counter(path p, tags t) -> std::shared_ptr<counter_intf> = 0;
-  virtual auto new_gauge(path p, tags t) -> std::shared_ptr<gauge_intf> = 0;
-  virtual auto new_string(path p, tags t) -> std::shared_ptr<string_intf> = 0;
-  virtual auto new_timing(path p, tags t, timing_intf::duration resolution, std::size_t buckets) -> std::shared_ptr<timing_intf> = 0;
-  virtual auto new_cumulative_timing(path p, tags t) -> std::shared_ptr<timing_intf> = 0;
-
-  virtual auto new_counter_cb(path p, tags t, std::function<double()> cb) -> std::shared_ptr<void> = 0;
-  virtual auto new_gauge_cb(path p, tags t, std::function<double()> cb) -> std::shared_ptr<void> = 0;
-  virtual auto new_string_cb(path p, tags t, std::function<std::string()> cb) -> std::shared_ptr<void> = 0;
-};
 
 
 class engine {
   public:
   engine() = default;
 
-  engine(std::shared_ptr<engine_intf> impl) noexcept;
-
-  auto new_counter(path p, tags t = tags()) const -> counter;
-  auto new_gauge(path p, tags t = tags()) const -> gauge;
-  auto new_string(path p, tags t = tags()) const -> string;
-  auto new_timing(path p, tags t, timing::duration resolution = timing::dfl_resolution, std::size_t buckets = timing::dfl_buckets) const -> timing;
-  auto new_timing(path p, timing::duration resolution = timing::dfl_resolution, std::size_t buckets = timing::dfl_buckets) const -> timing;
-  auto new_cumulative_timing(path p, tags t) const -> timing;
-
-  auto new_counter_cb(path p, tags t, std::function<double()> cb) const -> std::shared_ptr<void>;
-  auto new_counter_cb(path p, std::function<double()> cb) const -> std::shared_ptr<void>;
-  auto new_gauge_cb(path p, tags t, std::function<double()> cb) const -> std::shared_ptr<void>;
-  auto new_gauge_cb(path p, std::function<double()> cb) const -> std::shared_ptr<void>;
-  auto new_string_cb(path p, tags t, std::function<std::string()> cb) const -> std::shared_ptr<void>;
-  auto new_string_cb(path p, std::function<std::string()> cb) const -> std::shared_ptr<void>;
-
+  instrumentation_export_
   static auto global() -> engine&;
 
+  instrumentation_export_
+  void collect(collector& c) const;
+
+  template<typename MetricCb>
+  auto get_metric(metric_name name, MetricCb&& cb) -> std::shared_ptr<detail::metric_group_intf>;
+
   private:
-  std::shared_ptr<engine_intf> impl_;
+  auto get_existing_(const metric_name& name) const -> std::shared_ptr<detail::metric_group_intf>;
+  template<typename MetricCb>
+  auto get_or_create_(metric_name&& name, MetricCb&& cb) -> std::shared_ptr<detail::metric_group_intf>;
+
+  std::unordered_map<metric_name, std::shared_ptr<detail::metric_group_intf>> metrics_;
+  mutable std::shared_mutex mtx_;
 };
 
 
-inline engine::engine(std::shared_ptr<engine_intf> impl) noexcept
-: impl_(impl)
-{}
+template<typename MetricCb>
+inline auto engine::get_metric(metric_name name, MetricCb&& cb) -> std::shared_ptr<detail::metric_group_intf> {
+  auto mg = get_existing_(name);
+  if (mg == nullptr) mg = get_or_create_(std::move(name), std::forward<MetricCb>(cb));
+  return mg;
+}
+
+inline auto engine::get_existing_(const metric_name& name) const -> std::shared_ptr<detail::metric_group_intf> {
+  std::shared_lock<std::shared_mutex> lck{ mtx_ };
+
+  auto iter = metrics_.find(name);
+  if (iter == metrics_.end()) return nullptr;
+  return iter->second;
+}
+
+template<typename MetricCb>
+inline auto engine::get_or_create_(metric_name&& name, MetricCb&& cb) -> std::shared_ptr<detail::metric_group_intf> {
+  std::lock_guard<std::shared_mutex> lck{ mtx_ };
+  return std::get<0>(metrics_.emplace(std::move(name), std::invoke(std::forward<MetricCb>(cb))))->second;
+}
 
 
 } /* namespace instrumentation */

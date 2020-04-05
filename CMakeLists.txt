@@ -16,29 +16,32 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(headers
+    include/instrumentation/fwd.h
     include/instrumentation/counter.h
-    include/instrumentation/engine.h
+    include/instrumentation/counter-inl.h
     include/instrumentation/gauge.h
-    include/instrumentation/multi_engine.h
-    include/instrumentation/path.h
-    include/instrumentation/prometheus_engine.h
+    include/instrumentation/gauge-inl.h
     include/instrumentation/string.h
+    include/instrumentation/string-inl.h
+    include/instrumentation/timing.h
+    include/instrumentation/timing-inl.h
+    include/instrumentation/engine.h
+    include/instrumentation/metric_name.h
+    include/instrumentation/prometheus.h
     include/instrumentation/tags.h
     include/instrumentation/time_track.h
-    include/instrumentation/timing.h
+    include/instrumentation/collector.h
     )
 set(headers_detail
+    include/instrumentation/detail/metric_group.h
     )
 
 include_directories (include)
 add_library (instrumentation
-    src/counter.cc
     src/engine.cc
-    src/gauge.cc
-    src/multi_engine.cc
-    src/path.cc
-    src/prometheus_engine.cc
-    src/string.cc
+    src/collector.cc
+    src/metric_name.cc
+    src/prometheus.cc
     src/timing.cc
     )
 set_property (TARGET instrumentation PROPERTY VERSION ${INSTRUMENTATION_VERSION})
@@ -50,7 +53,7 @@ if(CMAKE_USE_PTHREADS_INIT)
   target_link_libraries(instrumentation INTERFACE ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
-target_include_directories(instrumentation INTERFACE
+target_include_directories(instrumentation PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 

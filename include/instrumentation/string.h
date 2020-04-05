@@ -1,46 +1,79 @@
 #ifndef INSTRUMENTATION_STRING_H
 #define INSTRUMENTATION_STRING_H
 
-#include <initializer_list>
+#include <instrumentation/fwd.h>
+#include <instrumentation/detail/metric_group.h>
+#include <array>
+#include <atomic>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
-#include <string_view>
-#include <instrumentation/tags.h>
 
-namespace instrumentation {
+namespace instrumentation::detail {
 
 
-class string_intf {
-  protected:
-  virtual ~string_intf() noexcept;
-
+class string_impl
+: public std::enable_shared_from_this<string_impl>
+{
   public:
-  void set(std::string_view s) noexcept;
+  void set(std::string s);
+  auto get() const -> std::string;
+  void collect(const metric_name& name, const tags& tags, collector& c);
 
   private:
-  virtual void do_set(std::string_view s) noexcept = 0;
-};
-
-
-class string {
-  public:
-  string() = default;
-
-  explicit string(std::string_view name);
-  string(std::string_view name, std::initializer_list<std::pair<const std::string, tags::tag_value>> tags);
-  string(std::string_view name, instrumentation::tags tags);
-
-  string(std::shared_ptr<string_intf> impl) noexcept
-  : impl_(std::move(impl))
-  {}
-
-  void operator=(std::string_view s) const noexcept;
-
-  private:
-  std::shared_ptr<string_intf> impl_;
+  mutable std::shared_mutex mtx_;
+  std::string v_;
 };
 
 
 } /* namespace instrumentation */
+
+namespace instrumentation {
+
+
+class string {
+  friend detail::string_impl;
+  template<typename... LabelTypes> friend class string_vector;
+
+  public:
+  string() = default;
+
+  void operator=(std::string s) const;
+
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
+  auto operator*() const -> std::string;
+
+  private:
+  std::shared_ptr<detail::string_impl> impl_;
+};
+
+
+template<typename... LabelTypes>
+class string_vector {
+  private:
+  using group_type = detail::metric_group<detail::string_impl, LabelTypes...>;
+
+  public:
+  string_vector() noexcept = default;
+  string_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  string_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  string_vector(std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  string_vector(engine& e, std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+
+  auto labels(const LabelTypes&... values) const -> string;
+
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
+
+  private:
+  std::shared_ptr<group_type> impl_;
+};
+
+
+} /* namespace instrumentation */
+
+#include "string-inl.h"
 
 #endif /* INSTRUMENTATION_STRING_H */
