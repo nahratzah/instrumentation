@@ -91,7 +91,7 @@ class metric_group
 
   auto make_tags_(const label_set& labels, std::index_sequence<> indices [[maybe_unused]]) const -> tags;
   template<std::size_t Idx0, std::size_t... Idx>
-  auto make_tags_(const label_set& labels, std::index_sequence<Idx0, Idx...> indices [[maybe_unused]]) -> tags;
+  auto make_tags_(const label_set& labels, std::index_sequence<Idx0, Idx...> indices [[maybe_unused]]) const -> tags;
 
   protected:
   metrics_map metrics_;
@@ -103,8 +103,7 @@ class metric_group
 
 template<typename MetricType, typename MetricConstructorArgTpl, typename... LabelTypes>
 class metric_group_impl
-: public metric_group<MetricType, LabelTypes...>,
-  public std::enable_shared_from_this<metric_group<MetricType>>
+: public metric_group<MetricType, LabelTypes...>
 {
   public:
   using metric_type = typename metric_group<MetricType, LabelTypes...>::metric_type;
@@ -178,7 +177,7 @@ auto metric_group<MetricType, LabelTypes...>::make_tags_(const label_set& labels
 
 template<typename MetricType, typename... LabelTypes>
 template<std::size_t Idx0, std::size_t... Idx>
-auto metric_group<MetricType, LabelTypes...>::make_tags_(const label_set& labels, std::index_sequence<Idx0, Idx...> indices [[maybe_unused]]) -> tags {
+auto metric_group<MetricType, LabelTypes...>::make_tags_(const label_set& labels, std::index_sequence<Idx0, Idx...> indices [[maybe_unused]]) const -> tags {
   return make_tags_(labels, std::index_sequence<Idx...>())
       .with(std::get<Idx0>(label_names_), std::get<Idx0>(labels));
 }

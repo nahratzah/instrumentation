@@ -11,7 +11,7 @@ inline void timing::operator<<(duration d) const noexcept {
   if (impl_) impl_->inc(d);
 }
 
-inline auto timing::get_histogram() const -> std::tuple<std::vector<histogram_entry>, std::uint64_t> {
+inline auto timing::operator*() const -> std::tuple<std::vector<histogram_entry>, std::uint64_t> {
   if (impl_) impl_->get_histogram();
   return std::make_tuple(std::vector<histogram_entry>(), 0);
 }

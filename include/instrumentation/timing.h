@@ -69,7 +69,7 @@ class timing {
   public:
   void operator<<(duration d) const noexcept;
 
-  auto get_histogram() const -> std::tuple<std::vector<histogram_entry>, std::uint64_t>;
+  auto operator*() const -> std::tuple<std::vector<histogram_entry>, std::uint64_t>;
 
   private:
   std::shared_ptr<detail::timing_impl> impl_;

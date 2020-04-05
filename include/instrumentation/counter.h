@@ -58,8 +58,13 @@ class counter_vector {
   counter_vector() noexcept = default;
   counter_vector(metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
   counter_vector(engine& e, metric_name name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  counter_vector(std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
+  counter_vector(engine& e, std::string_view name, std::array<std::string, sizeof...(LabelTypes)> labels, std::string description = "");
 
   auto labels(const LabelTypes&... values) const -> counter;
+
+  explicit operator bool() const noexcept;
+  auto operator!() const noexcept -> bool;
 
   private:
   std::shared_ptr<group_type> impl_;

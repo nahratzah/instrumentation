@@ -74,7 +74,7 @@ class prom_collector
   }
 
   void visit(const metric_name& name, const tags& t, const timing& m) override {
-    const auto h = m.get_histogram();
+    const auto h = *m;
     metric_name decorated_name = name;
     decorated_name.data().push_back("seconds");
 

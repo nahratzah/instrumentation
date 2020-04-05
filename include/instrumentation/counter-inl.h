@@ -57,12 +57,39 @@ counter_vector<LabelTypes...>::counter_vector(
 }
 
 template<typename... LabelTypes>
+counter_vector<LabelTypes...>::counter_vector(
+    std::string_view name,
+    std::array<std::string, sizeof...(LabelTypes)> labels,
+    std::string description)
+: counter_vector(metric_name(name), std::move(labels), std::move(description))
+{}
+
+template<typename... LabelTypes>
+counter_vector<LabelTypes...>::counter_vector(
+    engine& e,
+    std::string_view name,
+    std::array<std::string, sizeof...(LabelTypes)> labels,
+    std::string description)
+: counter_vector(e, metric_name(name), std::move(labels), std::move(description))
+{}
+
+template<typename... LabelTypes>
 auto counter_vector<LabelTypes...>::labels(const LabelTypes&... values) const -> counter {
   counter result;
   if (impl_ == nullptr) return result;
 
   result.impl_ = impl_->get(std::make_tuple(values...));
   return result;
+}
+
+template<typename... LabelTypes>
+counter_vector<LabelTypes...>::operator bool() const noexcept {
+  return impl_ != nullptr;
+}
+
+template<typename... LabelTypes>
+auto counter_vector<LabelTypes...>::operator!() const noexcept -> bool {
+  return impl_ == nullptr;
 }
 
 
