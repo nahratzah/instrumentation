@@ -4,8 +4,8 @@ enable_testing()
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-set(INSTRUMENTATION_VERSION_MAJOR 1 CACHE STRING "major version" FORCE)
-set(INSTRUMENTATION_VERSION_MINOR 1 CACHE STRING "minor version" FORCE)
+set(INSTRUMENTATION_VERSION_MAJOR 2 CACHE STRING "major version" FORCE)
+set(INSTRUMENTATION_VERSION_MINOR 0 CACHE STRING "minor version" FORCE)
 set(INSTRUMENTATION_VERSION ${INSTRUMENTATION_VERSION_MAJOR}.${INSTRUMENTATION_VERSION_MINOR} CACHE STRING "version" FORCE)
 
 # On windows, DLLs must be either in the search path, or in the same directory as the executable.
