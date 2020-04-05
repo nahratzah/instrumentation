@@ -60,12 +60,12 @@ TEST(prometheus_timing) {
       << 3000h;
 
   CHECK_EQUAL(std::string()
-      + "# HELP test_metric_seconds this is a test\n"
-      + "# TYPE test_metric_seconds histogram\n"
-      + "test_metric_seconds\t{label_name=\"foo\",le=\"0.001\",}\t1\n"
-      + "test_metric_seconds\t{label_name=\"foo\",le=\"0.005\",}\t1\n"
-      + "test_metric_seconds\t{label_name=\"foo\",le=\"0.3\",}\t3\n"
-      + "test_metric_seconds\t{label_name=\"foo\",le=\"+Inf\",}\t6\n",
+      + "# HELP test_metric this is a test\n"
+      + "# TYPE test_metric histogram\n"
+      + "test_metric\t{label_name=\"foo\",le=\"0.001\",}\t1\n"
+      + "test_metric\t{label_name=\"foo\",le=\"0.005\",}\t1\n"
+      + "test_metric\t{label_name=\"foo\",le=\"0.3\",}\t3\n"
+      + "test_metric\t{label_name=\"foo\",le=\"+Inf\",}\t6\n",
       collect_prometheus(e));
 }
 
