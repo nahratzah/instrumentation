@@ -33,7 +33,7 @@ class flag_manager {
   : stream_(&out),
     saved_(stream_->flags())
   {
-    stream_->setf(0, std::ios_base::floatfield);
+    stream_->setf(std::ios_base::fmtflags(0), std::ios_base::floatfield);
   }
 
   ~flag_manager() noexcept {
@@ -152,7 +152,7 @@ class prom_collector
                 return v < 0 ? R"(-Inf)" : R"(+Inf)";
               } else {
                 std::ostringstream oss;
-                oss.setf(0, std::ios_base::floatfield);
+                oss.setf(std::ios_base::fmtflags(0), std::ios_base::floatfield);
                 oss << v;
                 return quote_string(oss.str());
               }
