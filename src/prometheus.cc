@@ -36,6 +36,24 @@ class flag_manager {
     stream_->setf(std::ios_base::fmtflags(0), std::ios_base::floatfield);
   }
 
+  flag_manager(const flag_manager&) = delete;
+  flag_manager& operator=(const flag_manager&) = delete;
+
+  flag_manager(flag_manager&& y)
+      noexcept(std::is_nothrow_move_constructible_v<std::ios_base::fmtflags>)
+  : stream_(std::exchange(y.stream_, nullptr)),
+    saved_(std::move_if_noexcept(y.saved_))
+  {}
+
+  flag_manager& operator=(flag_manager&& y)
+      noexcept(std::is_nothrow_move_assignable_v<std::ios_base::fmtflags>) {
+    if (stream_ != nullptr) stream_->flags(saved_);
+
+    stream_ = std::exchange(y.stream_, nullptr);
+    saved_ = std::move(y.saved_);
+    return *this;
+  }
+
   ~flag_manager() noexcept {
     if (stream_ != nullptr) stream_->flags(saved_);
   }
@@ -43,6 +61,56 @@ class flag_manager {
   private:
   std::ios_base* stream_ = nullptr;
   std::ios_base::fmtflags saved_;
+};
+
+
+class locale_manager {
+  public:
+  locale_manager() = default;
+
+  locale_manager(std::ios_base& out)
+  : stream_(&out),
+    saved_(stream_->imbue(std::locale::classic()))
+  {}
+
+  locale_manager(const locale_manager&) = delete;
+  locale_manager& operator=(const locale_manager&) = delete;
+
+  locale_manager(locale_manager&& y) noexcept
+  : stream_(std::exchange(y.stream_, nullptr)),
+    saved_(y.saved_)
+  {}
+
+  locale_manager& operator=(locale_manager&& y) noexcept {
+    if (stream_ != nullptr) stream_->imbue(saved_);
+
+    stream_ = std::exchange(y.stream_, nullptr);
+    saved_ = y.saved_;
+    return *this;
+  }
+
+  ~locale_manager() noexcept {
+    if (stream_ != nullptr) stream_->imbue(saved_);
+  }
+
+  private:
+  std::ios_base* stream_ = nullptr;
+  std::locale saved_;
+};
+
+
+class stream_manager {
+  public:
+  stream_manager() = default;
+
+  stream_manager(std::ios_base& out)
+  : loc_(out),
+    fl_(out)
+  {}
+
+  private:
+  locale_manager loc_;
+  flag_manager fl_;
 };
 
 
@@ -97,8 +165,6 @@ class prom_collector
   void write_(const metric_name& name, const tags& t, const T& v, const char* metric_type = "untyped") {
     const auto pm_name = prom_metric_name(name);
 
-    flag_manager fm{ out };
-
     if (pending_help) {
       if (!pending_help->empty())
         out << "# HELP " << pm_name << " " << *pending_help << "\n";
@@ -141,6 +207,7 @@ class prom_collector
             } else if constexpr(std::is_same_v<std::int64_t, std::decay_t<decltype(v)>>) {
               std::ostringstream oss;
               oss.setf(std::ios_base::dec, std::ios_base::basefield);
+              oss.imbue(std::locale::classic());
               oss << v;
               return quote_string(oss.str());
             } else if constexpr(std::is_same_v<double, std::decay_t<decltype(v)>>) {
@@ -151,6 +218,7 @@ class prom_collector
               } else {
                 std::ostringstream oss;
                 oss.setf(std::ios_base::fmtflags(0), std::ios_base::floatfield);
+                oss.imbue(std::locale::classic());
                 oss << v;
                 return quote_string(oss.str());
               }
@@ -253,6 +321,7 @@ void collect_prometheus(std::ostream& out) {
 }
 
 void collect_prometheus(std::ostream& out, const engine& e) {
+  stream_manager sm{ out };
   prom_collector pc(out);
   e.collect(pc);
 }
